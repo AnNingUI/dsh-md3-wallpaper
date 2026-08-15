@@ -1,0 +1,391 @@
+/* md3-wallpaper skin — Material You (MD3) dynamic color surface.
+   Everything is scoped under body[data-dsh-md3-wallpaper] (dark variant on
+   [data-ds-dark-theme]), which apply() sets and retracts. Colors are NEVER
+   hard-coded here: the JS half writes the Monet-derived tokens (--dsw-static-*,
+   interaction aliases) and the M3 role tokens (--md-sys-color-*) onto body
+   style, so every rule below follows the uploaded wallpaper. The shape-system
+   rules wear the data-md3-shape gate (default on, switchable from the skin
+   menu). */
+
+/* --- Base surface ----------------------------------------------------------
+   The backdrop image itself is written by JS (--md3-backdrop); this block
+   only seeds the color while the JS half settles. The scroll lock mirrors
+   the JS lock (html/body overflow hidden) so no global scroll survives even
+   before the bundle settles. */
+
+body[data-dsh-md3-wallpaper]
+	g[clip-path="url(#dsh-wordmark-badge-clip)"]:has(
+		path[fill="var(--dsw-alias-label-primary-inverted)"]
+	) {
+	color: var(--md-sys-color-on-surface);
+}
+
+body[data-dsh-md3-wallpaper][data-ds-dark-theme] {
+	background-color: var(--md-sys-color-surface-container-lowest, #141218);
+}
+
+:global(html):has(body[data-dsh-md3-wallpaper]),
+body[data-dsh-md3-wallpaper] {
+	overflow: hidden;
+}
+
+/* --- aionui-panel bridge (file tree / git tree / preview) -----------------
+   The right-side panel system paints with its own --aion-* tokens defined on
+   :root / body[data-ds-dark-theme]. Bridging them onto the live M3 roles
+   makes the explorer, SCM and preview surfaces follow the wallpaper in both
+   themes (the role variables already flip with data-ds-dark-theme). */
+
+body[data-dsh-md3-wallpaper] {
+	--aion-bg-base: var(--md-sys-color-surface-container-lowest);
+	--aion-bg-1: var(--md-sys-color-surface-container-low);
+	--aion-bg-2: var(--md-sys-color-surface-container);
+	--aion-bg-3: var(--md-sys-color-surface-container-high);
+	--aion-bg-hover: var(--md-sys-color-surface-container-high);
+	--aion-bg-active: var(--md-sys-color-surface-container-highest);
+	--aion-text-primary: var(--md-sys-color-on-surface);
+	--aion-text-secondary: var(--md-sys-color-on-surface-variant);
+	--aion-text-tertiary: var(--md-sys-color-outline);
+	--aion-text-disabled: var(--md-sys-color-outline);
+	--aion-primary: var(--md-sys-color-primary);
+	--aion-success: var(--md-sys-color-tertiary);
+	--aion-warning: var(--md-sys-color-secondary);
+	--aion-danger: var(--md-sys-color-error);
+	--aion-brand: var(--md-sys-color-primary);
+	--aion-aou-1: var(--md-sys-color-surface-container);
+	--aion-aou-2: var(--md-sys-color-surface-container-high);
+	--aion-aou-3: var(--md-sys-color-surface-container-highest);
+	--aion-aou-4: var(--md-sys-color-outline-variant);
+	--aion-aou-5: var(--md-sys-color-outline);
+	--aion-aou-6: var(--md-sys-color-primary);
+	--aion-fill-2: var(--md-sys-color-surface-container-high);
+	--aion-fill-3: var(--md-sys-color-surface-container-highest);
+	--aion-border-base: var(--md-sys-color-outline-variant);
+	--aion-overlay-shadow: 0 8px 24px rgba(0, 0, 0, 0.16);
+	--aion-font-sans: var(--dsw-font-family);
+	--aion-font-mono: var(--ds-font-family-code);
+}
+
+/* --- Organic chrome: blossom FAB -------------------------------------------
+   A four-petal flower (SVG, art.ts), fixed at the M3 FAB corner. The glyphs
+   are absolutely stacked inside the petal: the temperature icon (MaterialYou
+   NewTab) at rest, the clock icon (MaterialYou NewTab default-weather dial)
+   once the menu opens — the morph rides M3 motion (fade + rotate + scale). */
+
+.md3Fab {
+	position: fixed;
+	right: 24px;
+	bottom: 24px;
+	z-index: 2147482000;
+	display: block;
+	width: 56px;
+	height: 56px;
+	padding: 0;
+	border: none;
+	background: transparent;
+	cursor: pointer;
+	transition: transform 0.18s
+		var(--md-sys-motion-ease, cubic-bezier(0.2, 0, 0, 1));
+}
+
+.md3Fab:hover {
+	transform: scale(1.06) rotate(8deg);
+}
+
+.md3Fab:active {
+	transform: scale(0.94);
+}
+
+.md3Fab:focus-visible {
+	outline: 2px solid var(--md-sys-color-primary, #6750a4);
+	outline-offset: 3px;
+	border-radius: 28px;
+}
+
+:global(body[data-dsh-md3-wallpaper] .md3-fab-petal) {
+	display: block;
+	filter: drop-shadow(0 3px 8px rgba(0, 0, 0, 0.24));
+}
+
+/* Both glyphs stack centered on the petal; the idle one is the temperature
+   icon, the open one the clock icon. */
+
+:global(body[data-dsh-md3-wallpaper] .md3-fab-glyph) {
+	position: absolute;
+	inset: 0;
+	margin: auto;
+	width: 26px;
+	height: 26px;
+	pointer-events: none;
+	transition:
+		opacity 0.24s var(--md-sys-motion-emphasized, cubic-bezier(0.2, 0, 0, 1)),
+		transform 0.24s var(--md-sys-motion-emphasized, cubic-bezier(0.2, 0, 0, 1));
+}
+
+:global(body[data-dsh-md3-wallpaper] .md3-fab-thermo) {
+	opacity: 1;
+	transform: rotate(0deg) scale(1);
+}
+
+:global(body[data-dsh-md3-wallpaper] .md3-fab-clock) {
+	opacity: 0;
+	transform: rotate(-90deg) scale(0.4);
+}
+
+:global(body[data-dsh-md3-wallpaper] .md3FabOpen .md3-fab-thermo) {
+	opacity: 0;
+	transform: rotate(90deg) scale(0.4);
+}
+
+:global(body[data-dsh-md3-wallpaper] .md3FabOpen .md3-fab-clock) {
+	opacity: 1;
+	transform: rotate(0deg) scale(1);
+}
+
+/* --- Organic chrome: wallpaper menu ----------------------------------------
+   An M3 large-corner panel (28px), surface-container-high, anchored above
+   the FAB. */
+
+.md3Menu {
+	position: fixed;
+	right: 24px;
+	bottom: 96px;
+	z-index: 2147482001;
+	display: none;
+	flex-direction: column;
+	gap: 4px;
+	width: 284px;
+	padding: 10px;
+	border: 1px solid var(--md-sys-color-outline-variant, #cac4d0);
+	border-radius: 28px;
+	background: var(--md-sys-color-surface-container-high, #ece6f0);
+	color: var(--md-sys-color-on-surface, #1d1b20);
+	box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3);
+	font-family: var(--dsw-font-family);
+	font-size: 13px;
+	line-height: 1.5;
+}
+
+.md3MenuOpen {
+	display: flex;
+	animation: md3-menu-in 0.16s cubic-bezier(0.2, 0, 0, 1);
+}
+
+@keyframes md3-menu-in {
+	from {
+		opacity: 0;
+		transform: translateY(8px) scale(0.98);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0) scale(1);
+	}
+}
+
+/* Wallpaper preview plate. */
+
+.md3MenuPreview {
+	height: 120px;
+	flex: none;
+	border-radius: 18px;
+	background-color: var(--md-sys-color-surface-variant, #e7e0ec);
+	background-size: cover;
+	background-position: center;
+	margin-bottom: 6px;
+	border: 1px solid var(--md-sys-color-outline-variant, #cac4d0);
+}
+
+/* Preset backdrop picker. */
+
+.md3MenuLabel {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 6px 12px 2px;
+	color: var(--md-sys-color-on-surface-variant, #49454f);
+	font-size: 12px;
+}
+
+.md3MenuLabel svg {
+	flex: none;
+}
+
+.md3MenuPresets {
+	display: flex;
+	gap: 8px;
+	padding: 4px 12px 8px;
+}
+
+.md3PresetSwatch {
+	flex: 1;
+	height: 34px;
+	padding: 0;
+	border: 1px solid var(--md-sys-color-outline-variant, #cac4d0);
+	border-radius: 999px;
+	cursor: pointer;
+	transition:
+		transform 0.12s ease,
+		box-shadow 0.12s ease;
+}
+
+.md3PresetSwatch:hover {
+	transform: translateY(-2px);
+	box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+}
+
+.md3PresetSwatch:active {
+	transform: scale(0.94);
+}
+
+.md3PresetSwatch:focus-visible {
+	outline: 2px solid var(--md-sys-color-primary, #6750a4);
+	outline-offset: 2px;
+}
+
+/* Menu rows: upload / reset / shape switch. */
+
+.md3MenuRow {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	width: 100%;
+	padding: 9px 12px;
+	border: none;
+	border-radius: 12px;
+	background: transparent;
+	color: var(--md-sys-color-on-surface, #1d1b20);
+	font: inherit;
+	text-align: left;
+	cursor: pointer;
+	transition: background-color 0.12s ease;
+}
+
+.md3MenuRow:hover {
+	background: color-mix(
+		in srgb,
+		var(--md-sys-color-on-surface, #1d1b20) 8%,
+		transparent
+	);
+}
+
+.md3MenuRow:active {
+	background: color-mix(
+		in srgb,
+		var(--md-sys-color-on-surface, #1d1b20) 14%,
+		transparent
+	);
+}
+
+.md3MenuRow:focus-visible {
+	outline: 2px solid var(--md-sys-color-primary, #6750a4);
+	outline-offset: -2px;
+}
+
+.md3MenuRow svg {
+	flex: none;
+	color: var(--md-sys-color-on-surface-variant, #49454f);
+}
+
+.md3MenuRowText {
+	flex: 1;
+	min-width: 0;
+}
+
+/* The shape toggle rides the same row as a native checkbox (M3 switch-like). */
+
+.md3MenuRow input[type="checkbox"] {
+	flex: none;
+	width: 40px;
+	height: 20px;
+	accent-color: var(--md-sys-color-primary, #6750a4);
+	cursor: pointer;
+}
+
+.md3FileInput {
+	display: none;
+}
+
+/* --- SVG coloring ----------------------------------------------------------
+   Shell icons paint with currentColor (they follow the text tokens, already
+   Monet-derived). The brand logo is a fixed-color multi-hue SVG: flatten it
+   onto the MD3 primary so no hard-coded hue survives. */
+
+body[data-dsh-md3-wallpaper] [class*="logoRow"] {
+	color: var(--md-sys-color-primary, #6750a4);
+}
+
+body[data-dsh-md3-wallpaper]
+	[class*="logoRow"]
+	svg
+	[fill]:not([fill="none"]):not([fill="currentColor"]) {
+	fill: currentColor;
+}
+
+body[data-dsh-md3-wallpaper]
+	[class*="logoRow"]
+	svg
+	[stroke]:not([stroke="none"]) {
+	stroke: currentColor;
+}
+
+/* --- M3 shape system (Material 3 corner language) --------------------------
+   Shape follows hierarchy — NOT one big corner everywhere: pill buttons
+   (full), tiny inputs (xs 4px), medium list rows (sm 8px), extra-large
+   dialogs (xl 28px), xs tooltips/menus, pill scrollbars. Gated by
+   data-md3-shape so users can switch the system off from the skin menu. */
+
+body[data-dsh-md3-wallpaper]:not([data-md3-shape="off"]) button {
+	border-radius: 999px;
+}
+
+body[data-dsh-md3-wallpaper]:not([data-md3-shape="off"])
+	input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+body[data-dsh-md3-wallpaper]:not([data-md3-shape="off"]) textarea,
+body[data-dsh-md3-wallpaper]:not([data-md3-shape="off"]) select {
+	border-radius: 4px;
+}
+
+body[data-dsh-md3-wallpaper]:not([data-md3-shape="off"]) [role="dialog"] {
+	border-radius: 28px;
+}
+
+body[data-dsh-md3-wallpaper]:not([data-md3-shape="off"]) [role="tooltip"] {
+	border-radius: 4px;
+}
+
+body[data-dsh-md3-wallpaper]:not([data-md3-shape="off"]) [role="menu"],
+body[data-dsh-md3-wallpaper]:not([data-md3-shape="off"]) [role="listbox"] {
+	border-radius: 4px;
+}
+
+body[data-dsh-md3-wallpaper]:not([data-md3-shape="off"]) [class*="sessionRow"] {
+	border-radius: 8px;
+}
+
+body[data-dsh-md3-wallpaper]:not([data-md3-shape="off"]) [class*="logoRow"] {
+	border-radius: 8px;
+}
+
+body[data-dsh-md3-wallpaper]:not([data-md3-shape="off"])
+	[class*="searchResult"] {
+	border-radius: 8px;
+}
+
+body[data-dsh-md3-wallpaper]:not([data-md3-shape="off"])
+	::-webkit-scrollbar-thumb {
+	border-radius: 999px;
+}
+
+/* aionui panel surfaces follow the shape language too (rows stay small). */
+
+body[data-dsh-md3-wallpaper]:not([data-md3-shape="off"]) .aionui-root button {
+	border-radius: 999px;
+}
+
+body[data-dsh-md3-wallpaper]:not([data-md3-shape="off"])
+	.aionui-root
+	[class*="treeRow"],
+body[data-dsh-md3-wallpaper]:not([data-md3-shape="off"])
+	.aionui-root
+	[class*="fileRow"] {
+	border-radius: 8px;
+}
