@@ -1,18 +1,21 @@
 {
-  // Standalone compiler shape for the md3-wallpaper skin bundle.
-  // Builds transpile-only (tsdown, dts: false): no type checking.
-  "compilerOptions": {
-    "target": "es2024",
-    "module": "esnext",
-    "moduleResolution": "bundler",
-    "jsx": "react-jsx",
-    "lib": ["ES2024", "DOM", "DOM.Iterable"],
-    "skipLibCheck": true,
-    "esModuleInterop": true,
-    "allowImportingTsExtensions": true,
-    "strict": true,
-    "noEmit": true,
-    "types": ["node"]
-  },
-  "include": ["src"]
+	// Standalone compiler shape for the md3-wallpaper skin bundle.
+	// Builds transpile-only (tsdown, dts: false): no type checking.
+	"compilerOptions": {
+		"target": "es2024",
+		"module": "esnext",
+		"moduleResolution": "bundler",
+		"jsx": "react-jsx",
+		"lib": ["ES2024", "DOM", "DOM.Iterable"],
+		"skipLibCheck": true,
+		"esModuleInterop": true,
+		"allowImportingTsExtensions": true,
+		"strict": true,
+		"noEmit": true,
+		"types": ["node"],
+		"paths": {
+			"@/*": ["src/*"]
+		}
+	},
+	"include": ["src"]
 }

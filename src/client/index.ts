@@ -29,6 +29,8 @@
 
 import type { Context } from "@deepseek-ai/cordis";
 import {
+	FAB_MORPH_CAPSULE,
+	FAB_MORPH_FLOWER,
 	fabMarkup,
 	faviconSvg,
 	ICON_PALETTE,
@@ -38,6 +40,7 @@ import {
 	menuIcon,
 } from "./art.ts";
 import css from "./md3-wallpaper.module.css";
+import { easeEmphasized, morphPath } from "./shape-morph.ts";
 import {
 	clearState,
 	defaultState,
@@ -428,14 +431,53 @@ export function apply(ctx: Context): void {
 		fileInput,
 	);
 
-	// Menu + FAB glyph morph (temperature -> clock) driven by the same toggle.
+	// Menu open/close drives two things: the `.md3FabOpen` glyph morph and the
+	// petal shape morph. The two FAB_MORPH_ paths share the SAME equal-polar
+	// sampling grid (index i is the same azimuth in both), so interpolating
+	// `d` expands each azimuth in place — the capsule "inflates" into the K
+	// ornament with no rotation / y=x flip.
+	const fabPetal = fab.querySelector(".bgLightTint") as SVGPathElement | null;
+	const MORPH_MS = 520; // slightly slower so the inflation is readable
+	let shapeRaf = 0;
+	// running capsule-weight: 1 = capsule (default), 0 = K-ornament.
+	let shapeWeight = 1;
+	/**
+	 * Animate the petal `d` toward `toWeight` (0 = ornament, 1 = capsule).
+	 * rAF steps morphPath() from the current weight.
+	 */
+	function runShapeMorph(toWeight: number): void {
+		if (fabPetal === null) return;
+		cancelAnimationFrame(shapeRaf);
+		const from = shapeWeight,
+			start = performance.now();
+		const step = (now: number): void => {
+			const k = Math.min(1, (now - start) / MORPH_MS);
+			// M3 emphasized easing: fast in, very slow settle (matches the glyphs).
+			const eased = easeEmphasized(k);
+			const w = from + (toWeight - from) * eased;
+			shapeWeight = w;
+			// w=1 → capsule, w=0 → flower (morphPath lerps capsule→flower).
+			fabPetal.setAttribute(
+				"d",
+				morphPath(FAB_MORPH_CAPSULE, FAB_MORPH_FLOWER, 1 - w),
+			);
+			if (k < 1) shapeRaf = requestAnimationFrame(step);
+		};
+		shapeRaf = requestAnimationFrame(step);
+	}
 	function toggleMenu(): void {
 		const open = menu.classList.toggle(cls("md3MenuOpen"));
-		fab.classList.toggle(cls("md3FabOpen"), open);
+		// `.md3FabOpen` is a literal global class (defined inside a `:global()`
+		// block in the stylesheet), so it is NOT exported through the CSS
+		// Modules hashed map — using cls() would return "" and blow up. Use the
+		// exact class name the CSS expects.
+		fab.classList.toggle("md3FabOpen", open);
+		runShapeMorph(open ? 0 : 1);
 	}
 	function closeMenu(): void {
 		menu.classList.remove(cls("md3MenuOpen"));
-		fab.classList.remove(cls("md3FabOpen"));
+		fab.classList.remove("md3FabOpen");
+		runShapeMorph(1);
 	}
 	function onDocClick(event: MouseEvent): void {
 		const target = event.target as Node | null;
@@ -487,6 +529,8 @@ export function apply(ctx: Context): void {
 			body.style.overflow = prevBodyOverflow;
 			document.removeEventListener("click", onDocClick);
 			document.removeEventListener("keydown", onDocKeydown);
+			cancelAnimationFrame(shapeRaf);
+			body.removeAttribute("data-md3-fab-open");
 			fab.remove();
 			menu.remove();
 			favicon.remove();

@@ -27,17 +27,17 @@
     "fmt:check": "oxfmt --check"
   },
   "dependencies": {
-    "@material/material-color-utilities": "^0.3.0"
+    "@material/material-color-utilities": "^0.4.0"
   },
   "devDependencies": {
     "@deepseek-ai/cordis": "^4.0.1",
     "@types/node": "^26.2.0",
-    "jsdom": "29.1.1",
-    "lightningcss": "^1.32.0",
+    "jsdom": "30.0.1",
+    "lightningcss": "^1.33.0",
     "oxfmt": "^0.63.0",
-    "tsdown": "^0.22.2",
+    "tsdown": "^0.22.14",
     "vite-tsconfig-paths": "^6.1.1",
-    "vitest": "^4.1.8"
+    "vitest": "^4.1.10"
   },
   "dsh": {
     "bundle": {
