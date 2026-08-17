@@ -71,8 +71,8 @@ describe("md3-wallpaper skin apply", () => {
 		expect(menu?.querySelector('[class*="md3MenuPreview"]')).not.toBeNull();
 		expect(menu?.querySelector('input[type="file"]')).not.toBeNull();
 		expect(menu?.querySelectorAll("[data-preset]").length).toBe(4);
-		expect(fab?.querySelector(".md3-fab-thermo")).not.toBeNull();
-		expect(fab?.querySelector(".md3-fab-clock")).not.toBeNull();
+		expect(fab?.querySelector(".md3-fab-icon-wallpaper")).not.toBeNull();
+		expect(fab?.querySelector(".md3-fab-icon-close-m")).not.toBeNull();
 		// The page scroll is locked while the skin is active.
 		expect(document.documentElement.style.overflow).toBe("hidden");
 		expect(document.body.style.overflow).toBe("hidden");

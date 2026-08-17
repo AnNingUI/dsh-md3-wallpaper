@@ -121,22 +121,22 @@ body[data-dsh-md3-wallpaper] {
 		transform 0.24s var(--md-sys-motion-emphasized, cubic-bezier(0.2, 0, 0, 1));
 }
 
-:global(body[data-dsh-md3-wallpaper] .md3-fab-thermo) {
+:global(body[data-dsh-md3-wallpaper] .md3-fab-icon-wallpaper) {
 	opacity: 1;
 	transform: rotate(0deg) scale(1);
 }
 
-:global(body[data-dsh-md3-wallpaper] .md3-fab-clock) {
+:global(body[data-dsh-md3-wallpaper] .md3-fab-icon-close-m) {
 	opacity: 0;
 	transform: rotate(-90deg) scale(0.4);
 }
 
-:global(body[data-dsh-md3-wallpaper] .md3FabOpen .md3-fab-thermo) {
+:global(body[data-dsh-md3-wallpaper] .md3FabOpen .md3-fab-icon-wallpaper) {
 	opacity: 0;
 	transform: rotate(90deg) scale(0.4);
 }
 
-:global(body[data-dsh-md3-wallpaper] .md3FabOpen .md3-fab-clock) {
+:global(body[data-dsh-md3-wallpaper] .md3FabOpen .md3-fab-icon-close-m) {
 	opacity: 1;
 	transform: rotate(0deg) scale(1);
 }
@@ -163,6 +163,14 @@ body[data-dsh-md3-wallpaper] {
 	font-family: var(--dsw-font-family);
 	font-size: 13px;
 	line-height: 1.5;
+}
+
+/* The panel is a self-contained skin widget: pin the CSS box model so
+   width: 100% rows + their padding never overflow the 284px plate, regardless
+   of whether the host page applies a global box-sizing reset. */
+.md3Menu,
+.md3Menu * {
+	box-sizing: border-box;
 }
 
 .md3MenuOpen {
@@ -282,6 +290,9 @@ body[data-dsh-md3-wallpaper] {
 
 .md3MenuRow svg {
 	flex: none;
+	/* 基线与文字居中 */
+	vertical-align: middle;
+	align-self: center;
 	color: var(--md-sys-color-on-surface-variant, #49454f);
 }
 
@@ -294,7 +305,7 @@ body[data-dsh-md3-wallpaper] {
 
 .md3MenuRow input[type="checkbox"] {
 	flex: none;
-	width: 40px;
+	width: 20px;
 	height: 20px;
 	accent-color: var(--md-sys-color-primary, #6750a4);
 	cursor: pointer;
