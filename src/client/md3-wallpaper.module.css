@@ -667,10 +667,9 @@ body[data-dsh-md3-wallpaper]:not([data-md3-shape="off"])
     var(--aion-bg-base) 36px
   ) !important;
 } */
-div[data-composer-seat] {
-	backdrop-filter: blur(8px);
-	-webkit-backdrop-filter: blur(8px);
-}
+/* div[data-composer-seat] {
+  background: 0 0 !important;
+} */
 
 /* --- Alias + specific surface: MD3 elevation ladder (light) ------------------
    The shell's chat surfaces and third-party panels (task-board etc.) paint

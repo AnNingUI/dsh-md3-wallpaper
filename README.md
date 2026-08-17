@@ -21,16 +21,33 @@ page is scroll-locked: neither html nor body scrolls in any direction.
 It also ships Material You organic chrome: a four-petal blossom FAB (not a
 plain circle) whose glyph is the MaterialYouNewTab temperature icon at rest
 and morphs — with M3 motion (fade + rotate + scale) — into its clock icon
-once the menu opens. The menu offers selectable preset backdrops (M3
-gradients generated live from the theme roles), wallpaper upload, restore
-default, and a switch for the M3 shape system (Material 3 corner language by
-hierarchy: pill buttons, small inputs, medium list rows, large dialogs, xs
-tooltips/menus, pill scrollbars — turn it off from the menu).
+once the menu opens. The menu offers a **Split Button upload with an
+import-effect picker**, restore default, a switch for the M3 shape system,
+and a "show wallpaper" toggle (see Features).
 
 The skin is presentation-only: no services are injected, no cordis events
 are emitted, nothing reaches a model request. Every write is retracted on
 dispose (body attribute, token variables, backdrop, scroll lock, chrome,
 favicon, title).
+
+## Features
+
+One thread around the background: upload any wallpaper and the skin extracts
+the Monet source color, builds a complete MD3 palette and applies it to the
+whole dsh UI; you can choose an **import effect** — **Original** (no
+processing, use the image as-is), **MD3 color filter** (default; builds a
+filter from the source palette and lightly blends it with the original by
+pixel tone, preserving detail) or **Monet unified tone** (tone remap) — from
+the arrow on the right of the **Upload wallpaper** button after opening the
+wallpaper-settings menu from the FAB in the bottom-right corner, switched any
+time and remembered. The pipeline supports **8K full-resolution** pixel
+processing at most: pixel work runs in a dedicated worker (Blob-inlined, zero
+extra requests), GPU first (WebGPU → WebGL2 fallback, consistent with the CPU
+reference), so the UI thread never stalls; the result persists to IndexedDB
+and the state to localStorage — a refresh restores it and dispose never drops
+the stored wallpaper. You can also enable **show wallpaper** to make the
+conversation area transparent and the main panes translucent frosted glass so
+the wallpaper shows through.
 
 ## Requirements
 
@@ -43,8 +60,13 @@ favicon, title).
 ```sh
 pnpm install     # installs @material/material-color-utilities + build tools
 pnpm build       # emits lib/index.js (node half) + lib/client.js (bundle)
-pnpm test        # vitest: palette mapping + apply/dispose contract
+pnpm test        # vitest: palette mapping + apply/dispose contract + color math
 ```
+
+> `build` runs `scripts/inline-worker.mjs` after tsdown, inlining the
+> standalone worker chunk (`lib/recolor.worker.js`) as a string into
+> `lib/client.js` so the browser creates the worker from a Blob URL — do not
+> drop this post-build step, or the recolor falls back to the main thread.
 
 ## Hot reload while hand-editing the theme
 
@@ -91,23 +113,20 @@ dsh plugin --profile web add link:<path-to-this-project>
 
 ## Using the skin
 
-A blossom FAB sits at the bottom-right corner, showing the temperature glyph.
-Click it — the glyph morphs (M3 motion) into the clock icon — and the menu
-opens:
+Click the FAB in the bottom-right corner to open the menu:
 
-- **Preset backdrops** — four M3 gradient backdrops generated live from the
-  theme roles (mesh / sunset / ocean / monochrome).
-- **Upload wallpaper** — any image; downscaled on a canvas (<= 512px, JPEG)
-  for both Monet extraction and the cover backdrop; the compact state
-  (wallpaper + both token sets) persists in localStorage, so a refresh
-  re-applies instantly.
-- **Restore default** — back to the M3 baseline seed (#6750A4) with the
-  default preset backdrop.
+- **Upload wallpaper (Split Button)** — the main area picks an image; the
+  chevron opens the import-effect picker (Original / MD3 color filter /
+  Monet unified tone), applied to this and future uploads.
+- **Restore default** — back to the M3 baseline seed (#6750A4).
 - **M3 shape system** — toggle the Material 3 corner language (persisted).
+- **Show wallpaper** — turn on translucent frosted panes (frame transparent)
+  so the wallpaper shows through (persisted).
 
 The theme flips live with the shell's dark/light switch: the dark scheme's
-inverted tonal mapping is applied immediately and the preset gradients
-re-render from the dark roles.
+inverted tonal mapping is applied immediately.
+Recolor runs in a worker: 8K uploads never stall the UI; the result is stored
+in IndexedDB and restored after a refresh.
 
 ## How the palette is mapped
 
@@ -139,5 +158,6 @@ request.
   exist).
 - Code syntax highlighting (the json-tree component) keeps its built-in
   colors (component-root tokens out-scope body variables).
-- The persisted wallpaper is a downscaled JPEG (<= 512px): a very large
-  monitor may show slight softening.
+- The persisted compact state is a downscaled JPEG (<= 512px); the backdrop
+  itself is the 8K full-precision recolored result (IndexedDB bitmap), so a
+  very large monitor keeps full sharpness on the wallpaper.
