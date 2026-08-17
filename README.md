@@ -1,7 +1,7 @@
 # @AnNingUI/dsh-client-ui-skin-md3-wallpaper
 
 <p align="center">
-  <span>English</span> | <a href="https://github.com/AnNingUI/AnNingUI/dsh-md3-wallpaper/README.zh.md">中文</a> 
+  <span>English</span> | <a href="./README.zh.md">中文</a> 
 </p>
 
 ![dark-mode-md3-filter](./preview/dark-filter.png)
