@@ -1,5 +1,12 @@
 # @AnNingUI/dsh-client-ui-skin-md3-wallpaper
 
+<p align="center">
+  <a href="https://github.com/AnNingUI/AnNingUI/dsh-md3-wallpaper/README.md">English</a> | <span>中文</span> 
+</p>
+
+![dark-mode-md3-filter](./preview/dark-filter.png)
+![dark-mode-md3-unified](./preview/dark.png)
+
 Material You (MD3) 动态取色皮肤，面向 dsh web GUI，作为**独立项目**存在——不依赖
 monorepo、皮肤中心注册表或画廊。克隆到任何位置、构建、一条命令安装即可。
 

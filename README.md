@@ -1,5 +1,12 @@
 # @AnNingUI/dsh-client-ui-skin-md3-wallpaper
 
+<p align="center">
+  <span>English</span> | <a href="https://github.com/AnNingUI/AnNingUI/dsh-md3-wallpaper/README.zh.md">中文</a> 
+</p>
+
+![dark-mode-md3-filter](./preview/dark-filter.png)
+![dark-mode-md3-unified](./preview/dark.png)
+
 Material You (MD3) dynamic-color skin for the dsh web GUI, as a **standalone
 project** — no monorepo, no skin-center registry, no gallery. Clone it
 anywhere, build it, install it with one command.
