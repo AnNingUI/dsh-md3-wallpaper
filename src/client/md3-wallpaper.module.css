@@ -42,6 +42,7 @@ body[data-dsh-md3-wallpaper] {
 	--aion-bg-3: var(--md-sys-color-surface-container-high);
 	--aion-bg-hover: var(--md-sys-color-surface-container-high);
 	--aion-bg-active: var(--md-sys-color-surface-container-highest);
+	--aion-bg-4: var(--md-sys-color-surface-container-highest);
 	--aion-text-primary: var(--md-sys-color-on-surface);
 	--aion-text-secondary: var(--md-sys-color-on-surface-variant);
 	--aion-text-tertiary: var(--md-sys-color-outline);
@@ -65,6 +66,79 @@ body[data-dsh-md3-wallpaper] {
 	--aion-font-mono: var(--ds-font-family-code);
 }
 
+/* --- Text + AI markdown surface (light) ------------------------------------
+   md3 remaps the --dsw-static-* board and the M3 role tokens, but the shell's
+   body-text and AI-markdown aliases are an independent frozen set. Riding on
+   M3 roles keeps them Monet-consistent in every wallpaper instead of the
+   default black-on-white. All values derive from the live role tokens so
+   they flip with data-ds-dark-theme through the dark block below. */
+
+body[data-dsh-md3-wallpaper] {
+	/* Body text: primary copy rides on-surface, secondary on on-surface-variant. */
+	--dsw-alias-label-primary: var(--md-sys-color-on-surface);
+	--dsw-alias-label-secondary: var(--md-sys-color-on-surface-variant);
+	--dsw-alias-label-tertiary: var(--md-sys-color-on-surface-variant);
+	--dsw-alias-label-primary-dimmed: var(--md-sys-color-on-surface-variant);
+
+	/* AI markdown: code/citation/tag surfaces are NEUTRAL wells in the base
+     skin (bluish-50..100, no hue) — riding the surface-container roller
+     keeps them Monet-consistent without inventing a hue they never had.
+     Only the code-block banner/inline-code keep a faint primary tint (they
+     sat closer to the brand in the base sheet). */
+	--dsw-alias-markdown-code-block-banner: color-mix(
+		in srgb,
+		var(--md-sys-color-surface-container-high) 88%,
+		var(--md-sys-color-primary) 12%
+	);
+	--dsw-alias-markdown-code-block: color-mix(
+		in srgb,
+		var(--md-sys-color-surface-container) 92%,
+		var(--md-sys-color-primary) 8%
+	);
+	--dsw-alias-markdown-inline-code: color-mix(
+		in srgb,
+		var(--md-sys-color-surface-container) 84%,
+		var(--md-sys-color-primary) 16%
+	);
+	/* Citation well (bluish-100 = one step below the code block) and tag well
+     (bluish-75 = the lightest grey wash): both neutral by design. */
+	--dsw-alias-markdown-citation: var(--md-sys-color-surface-container-high);
+	--dsw-alias-markdown-tag: var(--md-sys-color-surface-container);
+	--dsw-alias-markdown-placeholder: var(--md-sys-color-surface-container);
+	--dsw-alias-markdown-code-segment-selected: var(
+		--md-sys-color-primary-container
+	);
+	--dsw-alias-markdown-code-segment-unselected: var(
+		--md-sys-color-surface-container-low
+	);
+}
+
+/* --- Markdown alias: dark -------------------------------------------------
+   Deep sea-teal surface bases with a brighter primary tint so boxes keep
+   legible contrast on the dark Monet wallpaper. */
+
+body[data-dsh-md3-wallpaper][data-ds-dark-theme] {
+	--dsw-alias-label-primary: var(--md-sys-color-on-surface);
+	--dsw-alias-label-secondary: var(--md-sys-color-on-surface-variant);
+	--dsw-alias-label-tertiary: var(--md-sys-color-on-surface-variant);
+	--dsw-alias-label-primary-dimmed: var(--md-sys-color-on-surface-variant);
+
+	--dsw-alias-markdown-code-block-banner: var(
+		--md-sys-color-surface-container-high
+	);
+	--dsw-alias-markdown-code-block: var(--md-sys-color-surface-container);
+	--dsw-alias-markdown-inline-code: var(--md-sys-color-surface-container-high);
+	--dsw-alias-markdown-citation: var(--md-sys-color-surface-container-high);
+	--dsw-alias-markdown-tag: var(--md-sys-color-surface-container);
+	--dsw-alias-markdown-placeholder: var(--md-sys-color-surface-container);
+	--dsw-alias-markdown-code-segment-selected: var(
+		--md-sys-color-primary-container
+	);
+	--dsw-alias-markdown-code-segment-unselected: var(
+		--md-sys-color-surface-container-low
+	);
+}
+
 /* --- Organic chrome: blossom FAB -------------------------------------------
    A four-petal flower (SVG, art.ts), fixed at the M3 FAB corner. The glyphs
    are absolutely stacked inside the petal: the temperature icon (MaterialYou
@@ -83,8 +157,7 @@ body[data-dsh-md3-wallpaper] {
 	border: none;
 	background: transparent;
 	cursor: pointer;
-	transition: transform 0.18s
-		var(--md-sys-motion-ease, cubic-bezier(0.2, 0, 0, 1));
+	transition: transform 0.18s var(--md-sys-motion-ease);
 }
 
 .md3Fab:hover {
@@ -117,8 +190,8 @@ body[data-dsh-md3-wallpaper] {
 	height: 26px;
 	pointer-events: none;
 	transition:
-		opacity 0.24s var(--md-sys-motion-emphasized, cubic-bezier(0.2, 0, 0, 1)),
-		transform 0.24s var(--md-sys-motion-emphasized, cubic-bezier(0.2, 0, 0, 1));
+		opacity 0.24s var(--md-sys-motion-emphasized),
+		transform 0.24s var(--md-sys-motion-emphasized);
 }
 
 :global(body[data-dsh-md3-wallpaper] .md3-fab-icon-wallpaper) {
@@ -315,6 +388,192 @@ body[data-dsh-md3-wallpaper] {
 	display: none;
 }
 
+/* --- Split button (upload + import-effect picker) ---------------------------
+   MD3 split button: one tonal container, two independent hit areas separated
+   by a 1px divider. The main area uploads; the trailing chevron opens the
+   import-effect menu (original / MD3 filter / Monet unified tone). */
+
+.md3Split {
+	display: flex;
+	align-items: stretch;
+	width: 100%;
+	border-radius: 12px;
+	background: color-mix(
+		in srgb,
+		var(--md-sys-color-secondary-container, #e8def8) 70%,
+		transparent
+	);
+	border: 1px solid
+		color-mix(
+			in srgb,
+			var(--md-sys-color-outline-variant, #cac4d0) 55%,
+			transparent
+		);
+	overflow: hidden;
+}
+
+.md3SplitMain {
+	flex: 1;
+	min-width: 0;
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 9px 8px 9px 12px;
+	border: none;
+	background: transparent;
+	color: var(--md-sys-color-on-secondary-container, #1d192b);
+	font: inherit;
+	text-align: left;
+	cursor: pointer;
+	transition: background-color 0.12s ease;
+}
+
+.md3SplitMain:hover {
+	background: color-mix(
+		in srgb,
+		var(--md-sys-color-on-secondary-container, #1d192b) 8%,
+		transparent
+	);
+}
+
+.md3SplitMain:active {
+	background: color-mix(
+		in srgb,
+		var(--md-sys-color-on-secondary-container, #1d192b) 14%,
+		transparent
+	);
+}
+
+.md3SplitMain:focus-visible {
+	outline: 2px solid var(--md-sys-color-primary, #6750a4);
+	outline-offset: -2px;
+}
+
+.md3SplitMain svg {
+	flex: none;
+	color: var(--md-sys-color-on-secondary-container, #1d192b);
+}
+
+.md3SplitDivider {
+	flex: none;
+	width: 1px;
+	align-self: stretch;
+	background: color-mix(
+		in srgb,
+		var(--md-sys-color-outline, #79747e) 55%,
+		transparent
+	);
+}
+
+.md3SplitTrail {
+	flex: none;
+	width: 36px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border: none;
+	background: transparent;
+	color: var(--md-sys-color-on-secondary-container, #1d192b);
+	cursor: pointer;
+	transition:
+		background-color 0.12s ease,
+		transform 0.16s ease;
+}
+
+.md3SplitTrail:hover {
+	background: color-mix(
+		in srgb,
+		var(--md-sys-color-on-secondary-container, #1d192b) 8%,
+		transparent
+	);
+}
+
+.md3SplitTrail:active {
+	background: color-mix(
+		in srgb,
+		var(--md-sys-color-on-secondary-container, #1d192b) 14%,
+		transparent
+	);
+}
+
+.md3SplitTrail:focus-visible {
+	outline: 2px solid var(--md-sys-color-primary, #6750a4);
+	outline-offset: -2px;
+}
+
+.md3SplitTrail[aria-expanded="true"] {
+	transform: rotate(180deg);
+}
+
+/* Import-effect menu: small radio-style list below the split button. */
+
+.md3SplitMenu {
+	display: none;
+	flex-direction: column;
+	gap: 2px;
+	margin-top: 4px;
+	padding: 4px;
+	border: 1px solid var(--md-sys-color-outline-variant, #cac4d0);
+	border-radius: 12px;
+	background: var(--md-sys-color-surface-container-high, #ece6f0);
+	box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+.md3SplitMenuOpen {
+	display: flex;
+}
+
+.md3SplitOption {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	width: 100%;
+	padding: 8px 10px;
+	border: none;
+	border-radius: 8px;
+	background: transparent;
+	color: var(--md-sys-color-on-surface, #1d1b20);
+	font: inherit;
+	text-align: left;
+	cursor: pointer;
+	transition: background-color 0.12s ease;
+}
+
+.md3SplitOption:hover {
+	background: color-mix(
+		in srgb,
+		var(--md-sys-color-on-surface, #1d1b20) 8%,
+		transparent
+	);
+}
+
+.md3SplitOption:focus-visible {
+	outline: 2px solid var(--md-sys-color-primary, #6750a4);
+	outline-offset: -2px;
+}
+
+.md3SplitOptionCheck {
+	flex: none;
+	width: 16px;
+	text-align: center;
+	color: var(--md-sys-color-primary, #6750a4);
+	visibility: hidden;
+}
+
+.md3SplitOption[aria-checked="true"] .md3SplitOptionCheck {
+	visibility: visible;
+}
+
+.md3SplitOptionText {
+	flex: 1;
+	min-width: 0;
+}
+
+.md3SplitOption[aria-checked="true"] .md3SplitOptionText {
+	color: var(--md-sys-color-primary, #6750a4);
+	font-weight: 600;
+}
+
 /* --- SVG coloring ----------------------------------------------------------
    Shell icons paint with currentColor (they follow the text tokens, already
    Monet-derived). The brand logo is a fixed-color multi-hue SVG: flatten it
@@ -399,4 +658,807 @@ body[data-dsh-md3-wallpaper]:not([data-md3-shape="off"])
 	.aionui-root
 	[class*="fileRow"] {
 	border-radius: 8px;
+}
+
+/* div[data-composer-seat] {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--aion-bg-base) 0%, transparent) 0px,
+    var(--aion-bg-base) 36px
+  ) !important;
+} */
+div[data-composer-seat] {
+	backdrop-filter: blur(8px);
+	-webkit-backdrop-filter: blur(8px);
+}
+
+/* --- Alias + specific surface: MD3 elevation ladder (light) ------------------
+   The shell's chat surfaces and third-party panels (task-board etc.) paint
+   from the --dsw-alias-bg-* / --dsw-specific-* families. Where the base skin
+   keeps their default near-white fill (masking the wallpaper's hue), we remap
+   them onto the live M3 surface-container roller. Paper: MD3 surfaces are
+   near-opaque and carry height through the color *ladder* (lowest < low <
+   container < high < highest), NOT through translucency or backdrop blur —
+   so no color-mix+transparent and no frosted glass here. The Monet engine has
+   already tinted these very surface tones from the uploaded wallpaper, so the
+   UI reads as "one MD3 palette derived from the image" without ever peeking
+   through it. */
+
+body[data-dsh-md3-wallpaper] {
+	--dsw-alias-bg-base: var(--md-sys-color-surface-container-lowest);
+	--dsw-alias-bg-layer-1: var(--md-sys-color-surface-container-low);
+	--dsw-alias-bg-layer-2: var(--md-sys-color-surface-container);
+	--dsw-alias-bg-layer-3: var(--md-sys-color-surface-container-high);
+	--dsw-alias-bg-overlay: var(--md-sys-color-surface-container-high);
+
+	/* Inputs: an elevated, clearly-scoped surface with a crisp rim. */
+	--dsw-specific-input-major: var(--md-sys-color-surface-container-high);
+	--dsw-specific-login-input: var(--md-sys-color-surface-container-high);
+
+	/* Sidebar chip: active = neutral selected pill one step up the surface
+     ladder (base skin's bluish-100/750 keeps the pill gray; brand hue is
+     reserved for -active-accent), hover sits between fill and active. */
+	--dsw-specific-sidebar-fill: var(--md-sys-color-surface-container-low);
+	--dsw-specific-sidebar-nav-item-active: var(
+		--md-sys-color-surface-container-high
+	);
+	--dsw-specific-sidebar-nav-item-hover: var(--md-sys-color-surface-container);
+	--dsw-specific-sidebar-nav-item-active-accent: var(
+		--md-sys-color-primary-container
+	);
+
+	/* Floating layers keep the next surface step for readable separation. Bubble
+     surfaces are brand-tinted in the base skin (deepseek-50/-200 → primary
+     family): bubble rides primary-container, highlight one notch stronger. */
+	--dsw-specific-bubble: var(--md-sys-color-primary-container);
+	--dsw-specific-menu: var(--md-sys-color-surface-container-high);
+	--dsw-specific-tip: var(--md-sys-color-surface-container);
+}
+
+/* --- Pane surfaces (light): MD3 opaque by default; frosted when "show bg".
+   The wallpaper lives on body. With show-bg off (default) the layout keeps
+   MD3 opaque surface ladder; with show-bg on the columns turn translucent
+   frosted glass so the wallpaper glows through (Miku-style, MD3 palette). */
+
+body[data-dsh-md3-wallpaper] [data-pane="sidebar"] > div {
+	background: var(--md-sys-color-surface-container-low);
+}
+body[data-dsh-md3-wallpaper] [data-pane="conversation"] {
+	background: var(--md-sys-color-surface-container);
+}
+body[data-dsh-md3-wallpaper] [data-pane="details"] {
+	background: var(--md-sys-color-surface-container-high);
+}
+
+/* Show-background mode: frosted translucent panes + transparent frame layer
+   (the dsh layout container between the panes and body that otherwise paints
+   an opaque white over the wallpaper). !important beats the shell's own
+   data-pane / centerCol layout backgrounds. */
+body[data-dsh-md3-wallpaper][data-md3-show-bg="on"]
+	[data-pane="sidebar"]
+	> div {
+	background: color-mix(
+		in srgb,
+		var(--md-sys-color-surface-container-low) 55%,
+		transparent
+	) !important;
+	backdrop-filter: blur(12px) !important;
+	-webkit-backdrop-filter: blur(12px) !important;
+}
+body[data-dsh-md3-wallpaper][data-md3-show-bg="on"] [data-pane="conversation"] {
+	background: color-mix(
+		in srgb,
+		var(--md-sys-color-surface-container) 58%,
+		transparent
+	) !important;
+	backdrop-filter: blur(10px) !important;
+	-webkit-backdrop-filter: blur(10px) !important;
+}
+body[data-dsh-md3-wallpaper][data-md3-show-bg="on"] [data-pane="details"] {
+	background: color-mix(
+		in srgb,
+		var(--md-sys-color-surface-container-high) 60%,
+		transparent
+	) !important;
+	backdrop-filter: blur(12px) !important;
+	-webkit-backdrop-filter: blur(12px) !important;
+}
+/* The frame container (dsh layout) must not paint opaque over the backdrop. */
+body[data-dsh-md3-wallpaper][data-md3-show-bg="on"] [class*="frame"] {
+	background: transparent !important;
+}
+body[data-dsh-md3-wallpaper][data-md3-show-bg="on"] [class*="frame"] > div {
+	background: transparent !important;
+}
+
+/* --- Alias + specific surface: MD3 elevation ladder (dark) ------------------
+   Dark keeps the mirrored ladder one level deeper for the night look. The
+   pane columns become deep translucent frosted glass (higher opacity than
+   light so the pale text keeps contrast on the dark wallpaper). */
+
+body[data-dsh-md3-wallpaper][data-ds-dark-theme] {
+	--dsw-alias-bg-base: var(--md-sys-color-surface-container-lowest);
+	--dsw-alias-bg-layer-1: var(--md-sys-color-surface-container-low);
+	--dsw-alias-bg-layer-2: var(--md-sys-color-surface-container);
+	--dsw-alias-bg-layer-3: var(--md-sys-color-surface-container-high);
+	--dsw-alias-bg-overlay: var(--md-sys-color-surface-container-high);
+
+	--dsw-specific-input-major: var(--md-sys-color-surface-container-high);
+	--dsw-specific-login-input: var(--md-sys-color-surface-container-high);
+
+	--dsw-specific-sidebar-fill: var(--md-sys-color-surface-container-low);
+	--dsw-specific-sidebar-nav-item-active: var(
+		--md-sys-color-surface-container-high
+	);
+	--dsw-specific-sidebar-nav-item-hover: var(--md-sys-color-surface-container);
+	--dsw-specific-sidebar-nav-item-active-accent: var(
+		--md-sys-color-primary-container
+	);
+
+	--dsw-specific-bubble: var(--md-sys-color-primary-container);
+	--dsw-specific-menu: var(--md-sys-color-surface-container-high);
+	--dsw-specific-tip: var(--md-sys-color-surface-container);
+}
+
+body[data-dsh-md3-wallpaper][data-ds-dark-theme] [data-pane="sidebar"] > div {
+	background: var(--md-sys-color-surface-container-low);
+}
+body[data-dsh-md3-wallpaper][data-ds-dark-theme] [data-pane="conversation"] {
+	background: var(--md-sys-color-surface-container);
+}
+body[data-dsh-md3-wallpaper][data-ds-dark-theme] [data-pane="details"] {
+	background: var(--md-sys-color-surface-container-high);
+}
+
+body[data-dsh-md3-wallpaper][data-md3-show-bg="on"][data-ds-dark-theme]
+	[data-pane="sidebar"]
+	> div {
+	background: color-mix(
+		in srgb,
+		var(--md-sys-color-surface-container-low) 68%,
+		transparent
+	) !important;
+	backdrop-filter: blur(12px) !important;
+	-webkit-backdrop-filter: blur(12px) !important;
+}
+body[data-dsh-md3-wallpaper][data-md3-show-bg="on"][data-ds-dark-theme]
+	[data-pane="conversation"] {
+	background: color-mix(
+		in srgb,
+		var(--md-sys-color-surface-container) 72%,
+		transparent
+	) !important;
+	backdrop-filter: blur(10px) !important;
+	-webkit-backdrop-filter: blur(10px) !important;
+}
+body[data-dsh-md3-wallpaper][data-md3-show-bg="on"][data-ds-dark-theme]
+	[data-pane="details"] {
+	background: color-mix(
+		in srgb,
+		var(--md-sys-color-surface-container-high) 74%,
+		transparent
+	) !important;
+	backdrop-filter: blur(12px) !important;
+	-webkit-backdrop-filter: blur(12px) !important;
+}
+body[data-dsh-md3-wallpaper][data-md3-show-bg="on"][data-ds-dark-theme]
+	[class*="frame"],
+body[data-dsh-md3-wallpaper][data-md3-show-bg="on"][data-ds-dark-theme]
+	[class*="frame"]
+	> div {
+	background: transparent !important;
+}
+
+/* Composer seat: frosted elevated surface so the wallpaper glows behind the
+   typing line while the input stays readable. */
+/* div[data-composer-seat] {
+  background: color-mix(in srgb, var(--md-sys-color-surface-container-high) 78%, transparent) !important;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+} */
+
+/* --- Interaction + button aliases: MD3 (light) -----------------------------
+   palette.ts drives the neutral-gray hover/active/interaction aliases so
+   pressed buttons and open dropdown/listbox triggers render as washed gray.
+   MD3 instead colors these affordances with the primary tonal ramp. Override
+   the aliases onto primary / primary-container (the "selected/hover pill"
+   convention) and fill in the button family that the skin left at defaults. */
+
+body[data-dsh-md3-wallpaper] {
+	--dsw-alias-interactive-bg-hover: color-mix(
+		in srgb,
+		var(--md-sys-color-primary) 12%,
+		transparent
+	);
+	--dsw-alias-interactive-bg-active: color-mix(
+		in srgb,
+		var(--md-sys-color-primary-container) 90%,
+		var(--md-sys-color-on-primary-container) 10%
+	);
+	--dsw-alias-interactive-bg-hover-accent: color-mix(
+		in srgb,
+		var(--md-sys-color-primary) 16%,
+		transparent
+	);
+	--dsw-alias-interactive-bg-hover-solid: var(
+		--md-sys-color-surface-container-high
+	);
+	--dsw-alias-interactive-bg-hover-danger: color-mix(
+		in srgb,
+		var(--md-sys-color-error) 10%,
+		transparent
+	);
+
+	/* Primary buttons are INK in the base skin (bluish-1000 black fill +
+	   white foreground in light, inverted in dark — Button.module.css pairs
+	   fill with label-primary-foreground). MD3's ink pair is on-surface +
+	   surface, so the "primary" button stays a neutral ink button, NOT brand
+	   purple; brand belongs to info-fill below. */
+	--dsw-alias-button-primary-fill: var(--md-sys-color-on-surface);
+	--dsw-alias-button-primary-hover: color-mix(
+		in srgb,
+		var(--md-sys-color-on-surface) 80%,
+		var(--md-sys-color-surface-container) 20%
+	);
+	--dsw-alias-button-primary-dimmed: var(--md-sys-color-surface-container-high);
+	/* Toast + banner contrast fill inverts onto the M3 inverse surface
+	   (dark ink plate in light, light plate in dark). */
+	--dsw-alias-button-contrast-fill: var(--md-sys-color-inverse-surface);
+
+	/* Info buttons are BRAND (base deepseek-500/400 → primary family): the
+	   same token fills the send button, paints badge/icon text and draws the
+	   focus outline, so it must stay a strong mid-tone in both themes —
+	   primary is exactly that. */
+	--dsw-alias-button-info-fill: var(--md-sys-color-primary);
+	--dsw-alias-button-info-hover: color-mix(
+		in srgb,
+		var(--md-sys-color-primary) 86%,
+		var(--md-sys-color-on-primary) 14%
+	);
+	--dsw-alias-button-ghost-active-fill: var(--md-sys-color-primary-container);
+	--dsw-alias-button-ghost-active-hover: color-mix(
+		in srgb,
+		var(--md-sys-color-primary-container) 82%,
+		var(--md-sys-color-primary) 18%
+	);
+	--dsw-alias-button-ghost-active-border: var(--md-sys-color-primary);
+
+	/* Toolbar icons use the brand hue at low alpha (matches MD3 tonal icons). */
+	--dsw-alias-button-tool-bar-fill: color-mix(
+		in srgb,
+		var(--md-sys-color-primary) 46%,
+		transparent
+	);
+	--dsw-alias-button-tool-bar-fill-invisible: color-mix(
+		in srgb,
+		var(--md-sys-color-primary) 34%,
+		transparent
+	);
+	--dsw-alias-button-tool-bar-hover: color-mix(
+		in srgb,
+		var(--md-sys-color-primary) 58%,
+		transparent
+	);
+
+	/* Elevated/floating buttons sit on the surface, text rides on-surface. */
+	--dsw-alias-button-elevated-fill: var(--md-sys-color-surface-container-high);
+	--dsw-alias-button-floating-fill: var(--md-sys-color-surface-container);
+}
+
+body[data-dsh-md3-wallpaper][data-ds-dark-theme] {
+	--dsw-alias-interactive-bg-hover: color-mix(
+		in srgb,
+		var(--md-sys-color-primary) 16%,
+		transparent
+	);
+	--dsw-alias-interactive-bg-active: color-mix(
+		in srgb,
+		var(--md-sys-color-primary-container) 92%,
+		var(--md-sys-color-on-primary-container) 8%
+	);
+	--dsw-alias-interactive-bg-hover-accent: color-mix(
+		in srgb,
+		var(--md-sys-color-primary) 22%,
+		transparent
+	);
+	--dsw-alias-interactive-bg-hover-solid: var(
+		--md-sys-color-surface-container-high
+	);
+	--dsw-alias-interactive-bg-hover-danger: color-mix(
+		in srgb,
+		var(--md-sys-color-error) 14%,
+		transparent
+	);
+
+	--dsw-alias-button-primary-fill: var(--md-sys-color-on-surface);
+	--dsw-alias-button-primary-hover: color-mix(
+		in srgb,
+		var(--md-sys-color-on-surface) 82%,
+		var(--md-sys-color-surface-container) 18%
+	);
+	--dsw-alias-button-primary-dimmed: var(--md-sys-color-surface-container-high);
+	/* Toast + banner contrast fill inverts onto the M3 inverse surface. */
+	--dsw-alias-button-contrast-fill: var(--md-sys-color-inverse-surface);
+
+	--dsw-alias-button-info-fill: var(--md-sys-color-primary);
+	--dsw-alias-button-info-hover: color-mix(
+		in srgb,
+		var(--md-sys-color-primary) 82%,
+		var(--md-sys-color-on-primary) 18%
+	);
+	--dsw-alias-button-ghost-active-fill: var(--md-sys-color-primary-container);
+	--dsw-alias-button-ghost-active-hover: color-mix(
+		in srgb,
+		var(--md-sys-color-primary-container) 80%,
+		var(--md-sys-color-primary) 20%
+	);
+	--dsw-alias-button-ghost-active-border: var(--md-sys-color-primary);
+
+	--dsw-alias-button-tool-bar-fill: color-mix(
+		in srgb,
+		var(--md-sys-color-primary) 50%,
+		transparent
+	);
+	--dsw-alias-button-tool-bar-fill-invisible: color-mix(
+		in srgb,
+		var(--md-sys-color-primary) 38%,
+		transparent
+	);
+	--dsw-alias-button-tool-bar-hover: color-mix(
+		in srgb,
+		var(--md-sys-color-primary) 62%,
+		transparent
+	);
+
+	--dsw-alias-button-elevated-fill: var(--md-sys-color-surface-container-high);
+	--dsw-alias-button-floating-fill: var(--md-sys-color-surface-container);
+}
+
+/* --- Full label + border + mask + brand aliases: MD3 (light) -----------------
+   Completed alias surface. The label family gains its caption/dimmed/bluish/
+   foreground members (rides on-surface-variant / outline / secondary / on-primary).
+   Borders ride the M3 outline ramps (hairline outline-variant, stronger outline).
+   Photo/panel masks use rgba scrims over the live surface so backdrops keep a
+   readable veil in both themes; inverted borders reverse onto the surface. */
+
+body[data-dsh-md3-wallpaper] {
+	/* Labels beyond the primary/secondary/tertiary trio. */
+	--dsw-alias-label-caption: var(--md-sys-color-on-surface-variant);
+	--dsw-alias-label-dimmed: var(--md-sys-color-outline);
+	--dsw-alias-label-primary-bluish: var(--md-sys-color-secondary);
+	/* Foreground sits ON the ink/inverse plates (base bluish-00/1000 =
+	   white/black): the M3 surface role is exactly the ink pair's reverse. */
+	--dsw-alias-label-primary-foreground: var(--md-sys-color-surface);
+
+	/* Borders keep the base skin's alpha LADDER (hairline → pronounced): the
+     rungs are opacities of the outline role, not solid outline colors, so
+     the 0.04..0.16 (light) / 0.06..0.2 (dark) hierarchy survives. */
+	--dsw-alias-border-l1: color-mix(
+		in srgb,
+		var(--md-sys-color-outline) 15%,
+		transparent
+	);
+	--dsw-alias-border-l2: color-mix(
+		in srgb,
+		var(--md-sys-color-outline) 32%,
+		transparent
+	);
+	--dsw-alias-border-l2-darkmode-thin: color-mix(
+		in srgb,
+		var(--md-sys-color-outline) 22%,
+		transparent
+	);
+	--dsw-alias-border-l3: color-mix(
+		in srgb,
+		var(--md-sys-color-outline) 38%,
+		transparent
+	);
+	--dsw-alias-border-l4: color-mix(
+		in srgb,
+		var(--md-sys-color-outline) 48%,
+		transparent
+	);
+	--dsw-alias-border-inverted: color-mix(
+		in srgb,
+		var(--md-sys-color-on-surface) 12%,
+		transparent
+	);
+	--dsw-alias-border-inverted2: color-mix(
+		in srgb,
+		var(--md-sys-color-on-surface) 18%,
+		transparent
+	);
+
+	/* Overlay masks follow M3's scrim: the photo/shared masks keep the base
+     skin's near-opaque ink veil — scrim at the same alpha (0.28/0.14/0.5/0.88)
+     so the underlying backdrop stays readable without a hard black sheet. */
+	--dsw-alias-bg-mask-1: color-mix(
+		in srgb,
+		var(--md-sys-color-scrim) 28%,
+		transparent
+	);
+	--dsw-alias-bg-mask-2: color-mix(
+		in srgb,
+		var(--md-sys-color-scrim) 14%,
+		transparent
+	);
+	--dsw-alias-bg-mask-3: color-mix(
+		in srgb,
+		var(--md-sys-color-scrim) 50%,
+		transparent
+	);
+	--dsw-alias-bg-mask-photo: color-mix(
+		in srgb,
+		var(--md-sys-color-scrim) 88%,
+		transparent
+	);
+	--dsw-alias-bg-mask-drop: color-mix(
+		in srgb,
+		var(--md-sys-color-surface-container) 72%,
+		transparent
+	);
+
+	/* Component wells: module platform / multi-select are CONTROLS, not the
+     container ramp — M3 surface-variant is the spec role for input fields,
+     menus and selectors, and its 90/30 tones separate them from the lowest
+     background (100/4) clearly in both themes. */
+	--dsw-alias-bg-module-platform: var(--md-sys-color-surface-variant);
+	--dsw-alias-bg-multi-select: var(--md-sys-color-surface-variant);
+	--dsw-alias-bg-skeleton: color-mix(
+		in srgb,
+		var(--md-sys-color-on-surface) 7%,
+		transparent
+	);
+
+	/* Brand paints with the primary role; its "invert" flips to on-surface ink. */
+	--dsw-alias-brand-primary: var(--md-sys-color-primary);
+	--dsw-alias-brand-primary-invert: var(--md-sys-color-on-surface);
+	--dsw-alias-brand-text: var(--md-sys-color-on-primary);
+	--dsw-alias-brand-primary-new-colorprimary-new-color: var(
+		--md-sys-color-primary
+	);
+
+	/* Status family: business → primary, success → tertiary, warn → secondary,
+	   error → error (the M3 "five palettes" convention this skin follows). */
+	--dsw-alias-state-business-primary: var(--md-sys-color-primary);
+	--dsw-alias-state-business-tertiary: var(--md-sys-color-primary-container);
+
+	--dsw-alias-state-error-primary: var(--md-sys-color-error);
+	--dsw-alias-state-error-secondary: var(--md-sys-color-error-container);
+
+	--dsw-alias-state-success-primary: var(--md-sys-color-tertiary);
+	--dsw-alias-state-success-secondary: var(--md-sys-color-tertiary-container);
+	/* Tertiary surfaces are all solid containers (same as business/warn tertiary). */
+	--dsw-alias-state-success-tertiary: var(--md-sys-color-tertiary-container);
+
+	--dsw-alias-state-warn-primary: var(--md-sys-color-secondary);
+	--dsw-alias-state-warn-secondary: var(--md-sys-color-secondary-container);
+	--dsw-alias-state-warn-label: var(--md-sys-color-on-secondary-container);
+	--dsw-alias-state-warn-tertiary: var(--md-sys-color-secondary-container);
+
+	/* Toast + tooltip surfaces invert onto the scrim-inverted surface (M3
+	   "inverse surface" = a raised on-surface basin for transient chrome). */
+	--dsw-alias-toast-bg: var(--md-sys-color-inverse-surface);
+	--dsw-alias-tooltip-bg: var(--md-sys-color-inverse-surface);
+
+	/* Floating buttons raise one step on hover. */
+	--dsw-alias-button-floating-hover: var(--md-sys-color-surface-container-high);
+
+	/* Selector + bubble-highlight specifics that the base skin left at defaults.
+     Selector is a control surface (attach button / native select chip) — the
+     M3 surface-variant role (input fields, menus, selectors). Bubble-highlight
+     is brand-colored (base deepseek-200 → primary family), one notch stronger
+     than the plain bubble's primary-container. */
+	--dsw-specific-selector: var(--md-sys-color-surface-variant);
+	--dsw-specific-bubble-highlight: color-mix(
+		in srgb,
+		var(--md-sys-color-primary-container) 78%,
+		var(--md-sys-color-primary) 22%
+	);
+}
+
+body[data-dsh-md3-wallpaper][data-ds-dark-theme] {
+	--dsw-alias-label-caption: var(--md-sys-color-on-surface-variant);
+	--dsw-alias-label-dimmed: var(--md-sys-color-outline);
+	--dsw-alias-label-primary-bluish: var(--md-sys-color-secondary);
+	/* Foreground sits ON the ink/inverse plates (base bluish-00/1000 =
+	   white/black): the M3 surface role is exactly the ink pair's reverse. */
+	--dsw-alias-label-primary-foreground: var(--md-sys-color-surface);
+
+	--dsw-alias-border-l1: color-mix(
+		in srgb,
+		var(--md-sys-color-outline) 22%,
+		transparent
+	);
+	--dsw-alias-border-l2: color-mix(
+		in srgb,
+		var(--md-sys-color-outline) 40%,
+		transparent
+	);
+	--dsw-alias-border-l2-darkmode-thin: color-mix(
+		in srgb,
+		var(--md-sys-color-outline) 28%,
+		transparent
+	);
+	--dsw-alias-border-l3: color-mix(
+		in srgb,
+		var(--md-sys-color-outline) 48%,
+		transparent
+	);
+	--dsw-alias-border-l4: color-mix(
+		in srgb,
+		var(--md-sys-color-outline) 58%,
+		transparent
+	);
+	--dsw-alias-border-inverted: color-mix(
+		in srgb,
+		var(--md-sys-color-on-surface) 12%,
+		transparent
+	);
+	--dsw-alias-border-inverted2: color-mix(
+		in srgb,
+		var(--md-sys-color-on-surface) 18%,
+		transparent
+	);
+
+	--dsw-alias-bg-mask-1: color-mix(
+		in srgb,
+		var(--md-sys-color-scrim) 50%,
+		transparent
+	);
+	--dsw-alias-bg-mask-2: color-mix(
+		in srgb,
+		var(--md-sys-color-scrim) 24%,
+		transparent
+	);
+	--dsw-alias-bg-mask-3: color-mix(
+		in srgb,
+		var(--md-sys-color-scrim) 56%,
+		transparent
+	);
+	--dsw-alias-bg-mask-photo: color-mix(
+		in srgb,
+		var(--md-sys-color-scrim) 88%,
+		transparent
+	);
+	--dsw-alias-bg-mask-drop: color-mix(
+		in srgb,
+		var(--md-sys-color-surface-container) 76%,
+		transparent
+	);
+
+	--dsw-alias-bg-module-platform: var(--md-sys-color-surface-variant);
+	--dsw-alias-bg-multi-select: var(--md-sys-color-surface-variant);
+	--dsw-alias-bg-skeleton: color-mix(
+		in srgb,
+		var(--md-sys-color-on-surface) 9%,
+		transparent
+	);
+
+	--dsw-alias-brand-primary: var(--md-sys-color-primary);
+	--dsw-alias-brand-primary-invert: var(--md-sys-color-on-surface);
+	--dsw-alias-brand-text: var(--md-sys-color-on-primary);
+	--dsw-alias-brand-primary-new-colorprimary-new-color: var(
+		--md-sys-color-primary
+	);
+
+	--dsw-alias-state-business-primary: var(--md-sys-color-primary);
+	--dsw-alias-state-business-tertiary: var(--md-sys-color-primary-container);
+
+	--dsw-alias-state-error-primary: var(--md-sys-color-error);
+	--dsw-alias-state-error-secondary: var(--md-sys-color-error-container);
+
+	--dsw-alias-state-success-primary: var(--md-sys-color-tertiary);
+	--dsw-alias-state-success-secondary: var(--md-sys-color-tertiary-container);
+	/* Tertiary surfaces are all solid containers (same as business/warn tertiary). */
+	--dsw-alias-state-success-tertiary: var(--md-sys-color-tertiary-container);
+
+	--dsw-alias-state-warn-primary: var(--md-sys-color-secondary);
+	--dsw-alias-state-warn-secondary: var(--md-sys-color-secondary-container);
+	--dsw-alias-state-warn-label: var(--md-sys-color-on-secondary-container);
+	--dsw-alias-state-warn-tertiary: var(--md-sys-color-secondary-container);
+
+	--dsw-alias-toast-bg: var(--md-sys-color-inverse-surface);
+	--dsw-alias-tooltip-bg: var(--md-sys-color-inverse-surface);
+
+	--dsw-alias-button-floating-hover: var(--md-sys-color-surface-container-high);
+
+	--dsw-specific-selector: var(--md-sys-color-surface-variant);
+	--dsw-specific-bubble-highlight: color-mix(
+		in srgb,
+		var(--md-sys-color-primary-container) 78%,
+		var(--md-sys-color-primary) 22%
+	);
+}
+
+/* --- Syntax (shiki) + JsonTree palettes: MD3 (light) ------------------------
+   Code highlighting uses shiki's css-variables theme; its --shiki-* palette and
+   the JSON tree both paint from the same family map as the rest of the UI —
+   constant/function/link → primary, string → tertiary, keyword → secondary,
+   comment/punctuation → outline, so highlighted tokens carry the wallpaper hue
+   instead of a fixed rainbow. Backgrounds ride the surface container so blocks
+   sit in the chat surface. */
+
+body[data-dsh-md3-wallpaper] {
+	--shiki-foreground: var(--md-sys-color-on-surface);
+	--shiki-background: var(--md-sys-color-surface-container);
+	--shiki-token-constant: var(--md-sys-color-primary);
+	--shiki-token-string: var(--md-sys-color-tertiary);
+	--shiki-token-comment: var(--md-sys-color-outline);
+	--shiki-token-keyword: var(--md-sys-color-secondary);
+	--shiki-token-parameter: var(--md-sys-color-secondary);
+	--shiki-token-function: var(--md-sys-color-primary);
+	--shiki-token-string-expression: var(--md-sys-color-tertiary);
+	--shiki-token-punctuation: var(--md-sys-color-outline);
+	--shiki-token-link: var(--md-sys-color-primary);
+
+	--json-tree-property: var(--md-sys-color-primary);
+	--json-tree-string: var(--md-sys-color-tertiary);
+	--json-tree-number: var(--md-sys-color-secondary);
+	--json-tree-keyword: var(--md-sys-color-secondary);
+	--json-tree-punctuation: var(--md-sys-color-outline);
+	--json-tree-icon: var(--md-sys-color-outline);
+	--json-tree-hover: color-mix(
+		in srgb,
+		var(--md-sys-color-on-surface) 6%,
+		transparent
+	);
+}
+
+body[data-dsh-md3-wallpaper][data-ds-dark-theme] {
+	--shiki-foreground: var(--md-sys-color-on-surface);
+	--shiki-background: var(--md-sys-color-surface-container);
+	--shiki-token-constant: var(--md-sys-color-primary);
+	--shiki-token-string: var(--md-sys-color-tertiary);
+	--shiki-token-comment: var(--md-sys-color-outline);
+	--shiki-token-keyword: var(--md-sys-color-secondary);
+	--shiki-token-parameter: var(--md-sys-color-secondary);
+	--shiki-token-function: var(--md-sys-color-primary);
+	--shiki-token-string-expression: var(--md-sys-color-tertiary);
+	--shiki-token-punctuation: var(--md-sys-color-outline);
+	--shiki-token-link: var(--md-sys-color-primary);
+
+	--json-tree-property: var(--md-sys-color-primary);
+	--json-tree-string: var(--md-sys-color-tertiary);
+	--json-tree-number: var(--md-sys-color-secondary);
+	--json-tree-keyword: var(--md-sys-color-secondary);
+	--json-tree-punctuation: var(--md-sys-color-outline);
+	--json-tree-icon: var(--md-sys-color-outline);
+	--json-tree-hover: color-mix(
+		in srgb,
+		var(--md-sys-color-on-surface) 8%,
+		transparent
+	);
+}
+
+/* --- Widget tints: meter, hovercard, state dot, scrollbar binding ----------
+   The context meter's --meter-tint, the figma hover card's --dsw-hovercard-bg
+   and the timeline's --dsh-state-ongoing all default to hard-coded hues; they
+   ride M3 roles here so they follow the wallpaper. The shell rebinds its
+   scrollbars through --dsh-scrollbar-thumb{,-hover}; pointing those at the
+   already-Monet scrollbar aliases completes the standard-path rendering. */
+
+body[data-dsh-md3-wallpaper] {
+	--meter-tint: var(--md-sys-color-secondary);
+	--dsw-hovercard-bg: var(--md-sys-color-inverse-surface);
+	--dsh-state-ongoing: var(--md-sys-color-primary);
+	--dsh-scrollbar-thumb: var(--dsw-alias-scrollbar-bg-l1);
+	--dsh-scrollbar-thumb-hover: var(--dsw-alias-scrollbar-hover-l1);
+}
+
+/* The trajectory spans derive their tints from brand/error aliases; naming them
+   explicitly keeps every trajectory surface riding the wallpaper even after the
+   base sheet's color-mix inputs flip. `[data-timeline-span]` matches the span
+   elements (decoding/ttft), `[data-trajectory-scroll] table` the virtualized
+   event table (turn accent) — both stable DOM attributes, so the overrides
+   reach the module-scoped (hashed) surfaces regardless of CSS-module renaming. */
+body[data-dsh-md3-wallpaper] [data-timeline-span],
+body[data-dsh-md3-wallpaper] [data-trajectory-scroll] table {
+	--trajectory-assistant-decoding-color: color-mix(
+		in srgb,
+		var(--md-sys-color-primary) 60%,
+		var(--md-sys-color-error)
+	);
+	--trajectory-assistant-ttft-color: color-mix(
+		in srgb,
+		var(--trajectory-assistant-decoding-color) 54%,
+		var(--md-sys-color-surface-container)
+	);
+	--trajectory-turn-accent: color-mix(
+		in srgb,
+		var(--md-sys-color-secondary) 40%,
+		var(--md-sys-color-surface-container-low)
+	);
+}
+
+/* --- Depth: shadows + gradient blurs (light) ---------------------------------
+   M3 expresses depth through tone, not translucency, so the shell's drop
+   shadows are flattened onto the M3 shadow role at the skin's own opacities
+   (kept explicit so it does not double-count the surface ladder). The linear
+   "think" fade rides surface → transparent so it never fights the wallpaper. */
+
+body[data-dsh-md3-wallpaper] {
+	--dsw-shadow-lv1: 0 2px 4px 0
+		color-mix(in srgb, var(--md-sys-color-shadow) 26%, transparent);
+	--dsw-shadow-lv1-blur: 0 4px 12px 0
+		color-mix(in srgb, var(--md-sys-color-shadow) 14%, transparent);
+	--dsw-shadow-lv2: 0 2px 8px 0
+		color-mix(in srgb, var(--md-sys-color-shadow) 22%, transparent);
+	--dsw-shadow-lv3:
+		0 0 1px 0 color-mix(in srgb, var(--md-sys-color-shadow) 40%, transparent),
+		0 12px 32px 0
+			color-mix(in srgb, var(--md-sys-color-shadow) 30%, transparent);
+	--dsw-mask-blur: blur(2px);
+	--dsw-linear-gradient-think: linear-gradient(
+		180deg,
+		var(--md-sys-color-surface-container) 20.19%,
+		transparent 100%
+	);
+	--dsw-linear-think-select: linear-gradient(
+		180deg,
+		var(--md-sys-color-surface-container-high) 20.19%,
+		transparent 100%
+	);
+}
+
+body[data-dsh-md3-wallpaper][data-ds-dark-theme] {
+	--dsw-shadow-lv1: 0 2px 4px 0
+		color-mix(in srgb, var(--md-sys-color-shadow) 36%, transparent);
+	--dsw-shadow-lv1-blur: 0 4px 12px 0
+		color-mix(in srgb, var(--md-sys-color-shadow) 20%, transparent);
+	--dsw-shadow-lv2: 0 2px 8px 0
+		color-mix(in srgb, var(--md-sys-color-shadow) 30%, transparent);
+	--dsw-shadow-lv3:
+		0 0 1px 0 color-mix(in srgb, var(--md-sys-color-shadow) 48%, transparent),
+		0 12px 32px 0
+			color-mix(in srgb, var(--md-sys-color-shadow) 40%, transparent);
+	--dsw-mask-blur: blur(2px);
+	--dsw-linear-gradient-think: linear-gradient(
+		180deg,
+		var(--md-sys-color-surface-container) 20.19%,
+		transparent 100%
+	);
+	--dsw-linear-think-select: linear-gradient(
+		180deg,
+		var(--md-sys-color-surface-container-high) 20.19%,
+		transparent 100%
+	);
+}
+
+/* --- Missing MD3 design tokens: motion + elevation ---------------------------
+   Theme-independent MD3 motion/elevation tokens the chrome consumes, supplied
+   so --md-sys-motion-emphasized / --md-sys-motion-ease resolve to the real
+   Material curves instead of the inline cubic-bezier fallbacks. Light/dark agree
+   (these are physical, not color); declared once on the active body. */
+
+body[data-dsh-md3-wallpaper] {
+	--md-sys-motion-ease: cubic-bezier(0.2, 0, 0, 1);
+	--md-sys-motion-emphasized: cubic-bezier(0.2, 0, 0, 1);
+	--md-sys-motion-standard: cubic-bezier(0.2, 0, 0, 1);
+	--md-sys-motion-emphasized-accelerate: cubic-bezier(0.3, 0, 1, 1);
+	--md-sys-motion-emphasized-decelerate: cubic-bezier(0, 0, 0, 1);
+	--md-sys-duration-short-1: 50ms;
+	--md-sys-duration-short-2: 100ms;
+	--md-sys-duration-short-3: 150ms;
+	--md-sys-duration-short-4: 200ms;
+	--md-sys-duration-medium-1: 250ms;
+	--md-sys-duration-medium-2: 300ms;
+	--md-sys-duration-medium-3: 350ms;
+	--md-sys-duration-medium-4: 400ms;
+	--md-sys-elevation-level-0: 0 0 0 0 transparent;
+	--md-sys-elevation-level-1: 0 1px 2px 0
+		color-mix(in srgb, var(--md-sys-color-shadow) 20%, transparent);
+	--md-sys-elevation-level-2: 0 2px 6px 0
+		color-mix(in srgb, var(--md-sys-color-shadow) 24%, transparent);
+	--md-sys-elevation-level-3: 0 4px 16px 0
+		color-mix(in srgb, var(--md-sys-color-shadow) 28%, transparent);
+	--md-sys-elevation-level-4: 0 8px 24px 0
+		color-mix(in srgb, var(--md-sys-color-shadow) 32%, transparent);
+	--md-sys-elevation-level-5: 0 12px 36px 0
+		color-mix(in srgb, var(--md-sys-color-shadow) 36%, transparent);
+}
+
+/* class=*_root */
+div[class$="_root"][data-phase="active"] {
+	background: transparent !important;
 }

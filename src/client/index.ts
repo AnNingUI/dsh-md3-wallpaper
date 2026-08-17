@@ -39,24 +39,68 @@ import {
 	ICON_UPLOAD,
 	menuIcon,
 } from "./art.ts";
+import { canRecolor, detectGpu } from "./gpu.ts";
+import {
+	deleteBlob,
+	getBlob,
+	KEY_RAW,
+	KEY_RECOLORED,
+	objectUrlFor,
+	putBlob,
+} from "./indexeddb.ts";
 import css from "./md3-wallpaper.module.css";
+import { recolorBitmap } from "./recolor.ts";
 import { easeEmphasized, morphPath } from "./shape-morph.ts";
 import {
 	clearState,
 	defaultState,
 	loadState,
+	monetTargetFromSource,
 	processWallpaper,
 	saveState,
 	sourceHex,
 	WALLPAPER_PRESETS,
 	type WallpaperState,
 } from "./wallpaper.ts";
+import { terminateWorker } from "./worker.ts";
 
 /** The product title the skin pins (captured by the shell's DocumentTitle). */
 const SKIN_TITLE = "Material You · DeepSeek";
 
 /** Shape preference key (M3 shape system on/off). */
 const SHAPE_KEY = "dsh.md3Wallpaper.shape";
+
+/** Background-visible preference key (frosted panes vs opaque surfaces). */
+const SHOW_BG_KEY = "dsh.md3Wallpaper.showBg";
+
+/** Import-effect preference key (how uploaded wallpapers are processed). */
+const EFFECT_KEY = "dsh.md3Wallpaper.importEffect";
+
+/** The import-effect modes offered by the split button. */
+type EffectId = "original" | "md3filter" | "monet";
+const EFFECTS: readonly EffectId[] = ["original", "md3filter", "monet"];
+const DEFAULT_EFFECT: EffectId = "md3filter";
+
+/** Current import-effect preference. */
+function effectPref(): EffectId {
+	try {
+		const v = localStorage.getItem(EFFECT_KEY) as EffectId | null;
+		return v !== null && (EFFECTS as readonly string[]).includes(v)
+			? v
+			: DEFAULT_EFFECT;
+	} catch {
+		return DEFAULT_EFFECT;
+	}
+}
+
+/** Persist the import-effect preference. */
+function setEffectPref(value: EffectId): void {
+	try {
+		localStorage.setItem(EFFECT_KEY, value);
+	} catch {
+		// best-effort
+	}
+}
 
 /** Locale-aware chrome copy (the skin registers no locale namespace; the
  *  chrome follows the html lang attribute like the sibling skins' chrome). */
@@ -65,9 +109,13 @@ function copy(): {
 	reset: string;
 	shape: string;
 	shapeHint: string;
+	showBg: string;
+	showBgHint: string;
 	title: string;
 	presets: string;
 	presetNames: Record<string, string>;
+	effectLabel: string;
+	effects: Record<EffectId, string>;
 } {
 	const zh =
 		document.documentElement.lang?.toLowerCase().startsWith("zh") ?? false;
@@ -78,6 +126,8 @@ function copy(): {
 				shape: "M3 圆角形状",
 				shapeHint:
 					"Material 3 形状系统：按钮胶囊圆角、输入框小圆角、对话框大圆角",
+				showBg: "显示壁纸背景",
+				showBgHint: "开启后主面板变为半透明毛玻璃，壁纸透过面板显示",
 				title: "壁纸取色",
 				presets: "预设背景",
 				presetNames: {
@@ -86,6 +136,12 @@ function copy(): {
 					"monet-ocean": "深海",
 					"monet-mono": "素色",
 				},
+				effectLabel: "导入效果",
+				effects: {
+					original: "原图导入",
+					md3filter: "MD3 色彩滤镜",
+					monet: "Monet 统一色调",
+				},
 			}
 		: {
 				upload: "Upload wallpaper",
@@ -93,6 +149,8 @@ function copy(): {
 				shape: "M3 shape system",
 				shapeHint:
 					"Material 3 corners: pill buttons, small inputs, large dialogs",
+				showBg: "Show wallpaper",
+				showBgHint: "Frost the main panes so the wallpaper glows through",
 				title: "Wallpaper theme",
 				presets: "Preset backdrops",
 				presetNames: {
@@ -100,6 +158,12 @@ function copy(): {
 					"monet-sunset": "Sunset",
 					"monet-ocean": "Deep ocean",
 					"monet-mono": "Monochrome",
+				},
+				effectLabel: "Import effect",
+				effects: {
+					original: "Original",
+					md3filter: "MD3 color filter",
+					monet: "Monet unified tone",
 				},
 			};
 }
@@ -120,6 +184,24 @@ function shapePref(): "on" | "off" {
 function setShapePref(value: "on" | "off"): void {
 	try {
 		localStorage.setItem(SHAPE_KEY, value);
+	} catch {
+		// best-effort
+	}
+}
+
+/** Current background-visibility preference (default off = MD3 opaque). */
+function showBgPref(): "on" | "off" {
+	try {
+		return localStorage.getItem(SHOW_BG_KEY) === "on" ? "on" : "off";
+	} catch {
+		return "off";
+	}
+}
+
+/** Persist the background-visibility preference. */
+function setShowBgPref(value: "on" | "off"): void {
+	try {
+		localStorage.setItem(SHOW_BG_KEY, value);
 	} catch {
 		// best-effort
 	}
@@ -236,10 +318,30 @@ export function apply(ctx: Context): void {
 	const text = copy();
 	body.dataset.dshMd3Wallpaper = "";
 	body.setAttribute("data-md3-shape", shapePref());
+	body.setAttribute("data-md3-show-bg", showBgPref());
 	const stopDevReload = startDevReload();
 
 	// --- persisted state (wallpaper/preset + tokens) or the default seed ----
 	let state: WallpaperState = loadState() ?? defaultState();
+
+	/** GPU backend this environment offers (spec: none hides the wallpaper). */
+	const gpuKind = detectGpu();
+	/** Active object URL of the recolored (Monet-unified) full-res wallpaper. */
+	let recoloredUrl: string | null = null;
+	/** Object URLs this apply() created; revoked on dispose. */
+	const ownedUrls = new Set<string>();
+	/** True once recoloredUrl has been rendered / attempted (no-GPU short circuit). */
+	let recolorSettled = false;
+
+	/** Adopt a fresh object URL and retire any predecessor. Empty clears. */
+	const takeUrl = (url: string): void => {
+		if (recoloredUrl) {
+			URL.revokeObjectURL(recoloredUrl);
+			ownedUrls.delete(recoloredUrl);
+		}
+		recoloredUrl = url || null;
+		if (url) ownedUrls.add(url);
+	};
 
 	/** Keys this skin has written onto body style (retracted on dispose). */
 	const writtenKeys = new Set<string>();
@@ -277,9 +379,18 @@ export function apply(ctx: Context): void {
 
 	const backdropFor = (dark: boolean): string => {
 		const sys = dark ? state.mdSys.dark : state.mdSys.light;
-		if (state.wallpaper !== null) {
-			const veil = dark ? 0.5 : 0.3;
-			return `linear-gradient(rgba(0, 0, 0, ${veil}), rgba(0, 0, 0, ${veil + 0.08})), url(${state.wallpaper})`;
+		// MD3 wallpaper-as-atmosphere: a light neutral tint over the image so
+		// the wallpaper is legible where the canvas peeks through, without the
+		// heavy surface-color veil that previously buried it. Panels stay
+		// opaque (surface-container), so the tone comes from Monet, not from
+		// forcing the image through the chrome.
+		const veil = dark ? 0.78 : 0.78;
+		const tint = dark ? "#0a0a0e" : "#ffffff";
+		const scrim = `linear-gradient(color-mix(in srgb, ${tint} ${veil * 100}%, transparent))`;
+		// The image layer rides a dedicated CSS var so it can be swapped
+		// independently of the scrim geometry/elevation in --md3-backdrop.
+		if (recoloredUrl || (state.wallpaper !== null && canRecolor(gpuKind))) {
+			return `${scrim}, var(--md3-image-bg)`;
 		}
 		if (
 			state.preset !== null &&
@@ -293,6 +404,14 @@ export function apply(ctx: Context): void {
 		return `linear-gradient(160deg, ${from} 0%, ${mid} 55%, ${to} 130%)`;
 	};
 
+	/** The current wallpaper image URL (`url(...)`) or `none` when hidden. */
+	const imageFor = (): string => {
+		if (recoloredUrl) return `url(${recoloredUrl})`;
+		if (state.wallpaper !== null && canRecolor(gpuKind))
+			return `url(${state.wallpaper})`;
+		return "none";
+	};
+
 	/** (Re)apply the current theme's token set + backdrop onto body. */
 	const applyTheme = (): void => {
 		const dark = body.dataset.dsDarkTheme !== undefined;
@@ -300,8 +419,16 @@ export function apply(ctx: Context): void {
 		const sys = dark ? state.mdSys.dark : state.mdSys.light;
 		for (const [key, value] of Object.entries(tokens)) setVar(key, value);
 		for (const [key, value] of Object.entries(sys)) setVar(key, value);
+		// Dedicated image layer: swap the wallpaper URL independent of the
+		// scrim/surface declared in --md3-backdrop.
+		setVar("--md3-image-bg", imageFor());
 		setVar("--md3-backdrop", backdropFor(dark));
 		setVar("background-image", "var(--md3-backdrop)");
+		// Backdrop blur is driven by the skin-center's --dsw-skin-scrim
+		// (0..1): 0 → no blur, 1 → 100px. The browser re-rasterizes the
+		// backdrop-filter live as the control moves — no JS wiring needed.
+		setVar("backdrop-filter", "blur(calc(var(--dsw-skin-scrim, 0) * 100px))");
+		setVar("-webkit-backdrop-filter", "blur(calc(var(--dsw-skin-scrim, 0) * 100px))");
 		setVar("background-size", "cover");
 		setVar("background-position", "center");
 		setVar("background-attachment", "fixed");
@@ -348,9 +475,80 @@ export function apply(ctx: Context): void {
 	preview.setAttribute("aria-label", text.title);
 
 	const refreshPreview = (): void => {
-		preview.style.backgroundImage = "var(--md3-backdrop)";
+		preview.style.backgroundImage = "var(--md3-image-bg)";
 		preview.style.backgroundSize = "cover";
 		preview.style.backgroundPosition = "center";
+	};
+
+	/**
+	 * Recolor a full-resolution source into a Monet-unified blob and adopt it as
+	 * the live backdrop. Stores the blob in IndexedDB, records the key on the
+	 * persisted state, and re-renders. On failure (decoding / no GPU output)
+	 * it falls back to the compact 512px wallpaper rather than losing the theme.
+	 */
+	const runRecolor = async (source: Blob | ImageBitmap): Promise<void> => {
+		if (!canRecolor(gpuKind)) {
+			recolorSettled = true;
+			return;
+		}
+		try {
+			const dark = body.dataset.dsDarkTheme !== undefined;
+			const mdSys = dark ? state.mdSys.dark : state.mdSys.light;
+			const effect = effectPref();
+			// original → blend 0 (identity); md3filter → light tone blend;
+			// monet → legacy hue-pull remap.
+			const target = monetTargetFromSource(
+				state.source,
+				mdSys,
+				dark,
+				effect === "md3filter" ? 0.35 : 0,
+				effect === "monet" ? 1 : 0,
+			);
+			const result = await recolorBitmap(source, target);
+			if (result === null) {
+				recolorSettled = true;
+				applyTheme();
+				refreshPreview();
+				return;
+			}
+			// Only persist the blob id when IndexedDB actually stored it —
+			// otherwise a refresh would see a dangling id and fall back to the
+			// compact wallpaper.
+			if (!(await putBlob(KEY_RECOLORED, result.blob))) {
+				recolorSettled = true;
+				applyTheme();
+				refreshPreview();
+				return;
+			}
+			state = { ...state, recoloredBlobId: KEY_RECOLORED };
+			saveState(state);
+			takeUrl(objectUrlFor(result.blob));
+			recolorSettled = true;
+			applyTheme();
+			refreshPreview();
+		} catch {
+			// Keep the current backdrop; recolor is best-effort.
+			recolorSettled = true;
+		}
+	};
+
+	/**
+	 * Restore a previously persisted recolored blob from IndexedDB on mount.
+	 * Without a GPU backend the spec hides the wallpaper, so we never attempt
+	 * a render path there.
+	 */
+	const restoreRecolored = async (): Promise<void> => {
+		if (!canRecolor(gpuKind)) {
+			recolorSettled = true;
+			return;
+		}
+		if (!state.recoloredBlobId) return;
+		const blob = await getBlob(state.recoloredBlobId);
+		if (!blob) return;
+		takeUrl(objectUrlFor(blob));
+		recolorSettled = true;
+		applyTheme();
+		refreshPreview();
 	};
 
 	const fileInput = document.createElement("input");
@@ -360,35 +558,77 @@ export function apply(ctx: Context): void {
 	fileInput.tabIndex = -1;
 	fileInput.setAttribute("aria-hidden", "true");
 
+	// Split button: main area uploads the wallpaper; the trailing chevron
+	// opens the import-effect menu (original / MD3 filter / Monet unified).
+	const split = document.createElement("div");
+	split.className = cls("md3Split");
+
 	const uploadRow = document.createElement("button");
 	uploadRow.type = "button";
-	uploadRow.className = cls("md3MenuRow");
+	uploadRow.className = cls("md3SplitMain");
 	uploadRow.innerHTML = `${menuIcon(ICON_UPLOAD)}<span>${text.upload}</span>`;
 	uploadRow.addEventListener("click", () => fileInput.click());
 
-	// Preset backdrop picker (M3 gradient swatches, like miku's selectable art).
-	const presetLabel = document.createElement("div");
-	presetLabel.className = cls("md3MenuLabel");
-	presetLabel.innerHTML = `${menuIcon(ICON_PALETTE)}<span>${text.presets}</span>`;
+	const splitDivider = document.createElement("span");
+	splitDivider.className = cls("md3SplitDivider");
 
-	const presetRow = document.createElement("div");
-	presetRow.className = cls("md3MenuPresets");
-	for (const preset of WALLPAPER_PRESETS) {
-		const swatch = document.createElement("button");
-		swatch.type = "button";
-		swatch.className = cls("md3PresetSwatch");
-		swatch.title = text.presetNames[preset.id] ?? preset.id;
-		swatch.setAttribute("aria-label", text.presetNames[preset.id] ?? preset.id);
-		swatch.dataset.preset = preset.id;
-		swatch.addEventListener("click", () => {
-			state = { ...state, wallpaper: null, preset: preset.id };
-			saveState(state);
-			applyTheme();
-			refreshPreview();
-			setFavicon();
-		});
-		presetRow.append(swatch);
-	}
+	const splitTrail = document.createElement("button");
+	splitTrail.type = "button";
+	splitTrail.className = cls("md3SplitTrail");
+	splitTrail.setAttribute("aria-haspopup", "menu");
+	splitTrail.setAttribute("aria-expanded", "false");
+	splitTrail.setAttribute("aria-label", text.effectLabel);
+	splitTrail.innerHTML =
+		'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z" fill="currentColor"/></svg>';
+
+	split.append(uploadRow, splitDivider, splitTrail);
+
+	// Import-effect menu (radio-style; check marks the active effect).
+	const splitMenu = document.createElement("div");
+	splitMenu.className = cls("md3SplitMenu");
+	splitMenu.setAttribute("role", "menu");
+	splitMenu.setAttribute("aria-label", text.effectLabel);
+	const renderEffectMenu = (): void => {
+		splitMenu.textContent = "";
+		const current = effectPref();
+		for (const id of EFFECTS) {
+			const option = document.createElement("button");
+			option.type = "button";
+			option.className = cls("md3SplitOption");
+			option.setAttribute("role", "menuitemradio");
+			option.setAttribute("aria-checked", String(id === current));
+			const check = document.createElement("span");
+			check.className = cls("md3SplitOptionCheck");
+			check.textContent = "✓";
+			const label = document.createElement("span");
+			label.className = cls("md3SplitOptionText");
+			label.textContent = text.effects[id];
+			option.append(check, label);
+			option.addEventListener("click", () => {
+				setEffectPref(id);
+				renderEffectMenu();
+				splitTrail.setAttribute("aria-expanded", "false");
+				splitMenu.classList.remove(cls("md3SplitMenuOpen"));
+			});
+			splitMenu.append(option);
+		}
+	};
+	renderEffectMenu();
+
+	const toggleSplitMenu = (): void => {
+		const open = splitMenu.classList.toggle(cls("md3SplitMenuOpen"));
+		splitTrail.setAttribute("aria-expanded", String(open));
+	};
+	splitTrail.addEventListener("click", (event) => {
+		event.stopPropagation();
+		toggleSplitMenu();
+	});
+	// Clicking anywhere else closes the effect menu.
+	splitMenu.addEventListener("click", (event) => event.stopPropagation());
+	document.addEventListener("click", () => {
+		splitMenu.classList.remove(cls("md3SplitMenuOpen"));
+		splitTrail.setAttribute("aria-expanded", "false");
+	});
 
 	const resetRow = document.createElement("button");
 	resetRow.type = "button";
@@ -397,6 +637,12 @@ export function apply(ctx: Context): void {
 	resetRow.addEventListener("click", () => {
 		clearState();
 		state = defaultState();
+		takeUrl("");
+		recolorSettled = false;
+		// The user explicitly reset: purge the persisted full-res blobs too,
+		// so a later refresh does not resurrect the recolored wallpaper.
+		void deleteBlob(KEY_RAW);
+		void deleteBlob(KEY_RECOLORED);
 		applyTheme();
 		refreshPreview();
 		setFavicon();
@@ -421,15 +667,26 @@ export function apply(ctx: Context): void {
 		setShapePref(next);
 	});
 
-	menu.append(
-		preview,
-		presetLabel,
-		presetRow,
-		uploadRow,
-		resetRow,
-		shapeRow,
-		fileInput,
-	);
+	const bgRow = document.createElement("label");
+	bgRow.className = cls("md3MenuRow");
+	bgRow.title = text.showBgHint;
+	const bgSwitch = document.createElement("input");
+	bgSwitch.type = "checkbox";
+	bgSwitch.checked = body.getAttribute("data-md3-show-bg") === "on";
+	const bgIcon = document.createElement("span");
+	bgIcon.className = cls("md3MenuRowIcon");
+	bgIcon.innerHTML = menuIcon(ICON_PALETTE);
+	const bgText = document.createElement("span");
+	bgText.className = cls("md3MenuRowText");
+	bgText.textContent = text.showBg;
+	bgRow.append(bgIcon, bgText, bgSwitch);
+	bgSwitch.addEventListener("change", () => {
+		const next = bgSwitch.checked ? "on" : "off";
+		body.setAttribute("data-md3-show-bg", next);
+		setShowBgPref(next);
+	});
+
+	menu.append(preview, split, splitMenu, resetRow, shapeRow, bgRow, fileInput);
 
 	// Menu open/close drives two things: the `.md3FabOpen` glyph morph and the
 	// petal shape morph. The two FAB_MORPH_ paths share the SAME equal-polar
@@ -503,11 +760,17 @@ export function apply(ctx: Context): void {
 			file.size,
 		);
 		void processWallpaper(file)
-			.then((next) => {
+			.then(async (next) => {
 				state = next;
+				// Persist the original full-res file so a bare re-render (or a
+				// future recolor) never depends on the caller keeping the File.
+				await putBlob(KEY_RAW, file);
+				saveState(state);
 				applyTheme();
 				refreshPreview();
 				setFavicon();
+				// Kick off the Monet-unified recolor on the original image.
+				void runRecolor(file);
 			})
 			.catch(() => {
 				// Unreadable image: keep the current theme untouched.
@@ -519,11 +782,14 @@ export function apply(ctx: Context): void {
 	document.title = SKIN_TITLE;
 	applyTheme();
 	refreshPreview();
+	// Restore a persisted recolored wallpaper (or settle the no-GPU case).
+	void restoreRecolored();
 
 	ctx.effect(
 		() => () => {
 			delete body.dataset.dshMd3Wallpaper;
 			body.removeAttribute("data-md3-shape");
+			body.removeAttribute("data-md3-show-bg");
 			themeObserver.disconnect();
 			html.style.overflow = prevHtmlOverflow;
 			body.style.overflow = prevBodyOverflow;
@@ -535,7 +801,15 @@ export function apply(ctx: Context): void {
 			menu.remove();
 			favicon.remove();
 			stopDevReload?.();
+			// Shut down the recolor worker so no off-thread job outlives the skin.
+			terminateWorker();
 			for (const key of writtenKeys) body.style.removeProperty(key);
+			// Release object URLs on teardown. The IndexedDB blobs are the
+			// persisted wallpaper — they must SURVIVE dispose so a refresh or
+			// re-mount restores the recolored wallpaper (deleting them here
+			// would leave a dangling recoloredBlobId and fall back to 512px).
+			for (const url of ownedUrls) URL.revokeObjectURL(url);
+			ownedUrls.clear();
 			if (document.title === SKIN_TITLE) document.title = originalTitle;
 		},
 		"ui-skin-md3-wallpaper: dynamic color surface",

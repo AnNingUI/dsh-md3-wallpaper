@@ -70,7 +70,11 @@ describe("md3-wallpaper skin apply", () => {
 		expect(menu).not.toBeNull();
 		expect(menu?.querySelector('[class*="md3MenuPreview"]')).not.toBeNull();
 		expect(menu?.querySelector('input[type="file"]')).not.toBeNull();
-		expect(menu?.querySelectorAll("[data-preset]").length).toBe(4);
+		// The preset-backdrop picker was removed; the split button + effect
+		// menu replace the upload row.
+		expect(menu?.querySelectorAll("[data-preset]").length).toBe(0);
+		expect(menu?.querySelector('[class*="md3Split"]')).not.toBeNull();
+		expect(menu?.querySelector('[class*="md3SplitMenu"]')).not.toBeNull();
 		expect(fab?.querySelector(".md3-fab-icon-wallpaper")).not.toBeNull();
 		expect(fab?.querySelector(".md3-fab-icon-close-m")).not.toBeNull();
 		// The page scroll is locked while the skin is active.
@@ -155,13 +159,16 @@ describe("md3-wallpaper skin apply", () => {
 			}),
 		);
 		fiber = await mount();
-		// The persisted wallpaper becomes the backdrop (stored in the backdrop
-		// variable; background-image references it).
-		expect(document.body.style.getPropertyValue("--md3-backdrop")).toContain(
-			"data:image/jpeg;base64,AAAA",
-		);
+		// The Monet token surface derives from the persisted source.
 		expect(
 			document.body.style.getPropertyValue("--dsw-static-deepseek-500"),
 		).toMatch(/^#[0-9a-f]{6}$/);
+		// Spec: no GPU backend -> hide the wallpaper entirely. jsdom has no
+		// WebGPU/WebGL, so the persisted `wallpaper` data URL must not render as
+		// a url() backdrop; the surface falls back to a preset gradient.
+		const backdrop =
+			document.body.style.getPropertyValue("--md3-backdrop");
+		expect(backdrop).not.toContain("data:image/jpeg;base64,AAAA");
+		expect(backdrop).toMatch(/gradient|linear|radial/);
 	});
 });

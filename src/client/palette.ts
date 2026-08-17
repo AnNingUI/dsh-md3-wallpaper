@@ -12,7 +12,8 @@
  * behind ("one token, none omitted"). `buildMdSysTheme` additionally emits
  * the standard M3 role tokens (`--md-sys-color-*`) the skin's chrome uses,
  * completing the missing M3 surface-container roles from the neutral palette
- * per the M3 spec tonal tables.
+ * per the M3 spec tonal tables, plus the equally missing surface-dim /
+ * surface-bright / surface-tint roles (the npm Scheme predates all of them).
  *
  * Role mapping (MD3 has exactly five tonal palettes; the shell has nine
  * families):
@@ -272,6 +273,15 @@ export function buildMdSysTokens(
   tokens["--md-sys-color-surface-container"] = hexFromArgb(neutral.tone(isDark ? 12 : 94));
   tokens["--md-sys-color-surface-container-high"] = hexFromArgb(neutral.tone(isDark ? 17 : 92));
   tokens["--md-sys-color-surface-container-highest"] = hexFromArgb(neutral.tone(isDark ? 22 : 90));
+  // M3 surface-dim / surface-bright roles (also absent from the npm Scheme):
+  // the dimmed base sits two tones below the surface baseline, the bright base
+  // two above, so floating cards can rest between scrim and the container ramp.
+  tokens["--md-sys-color-surface-dim"] = hexFromArgb(neutral.tone(isDark ? 6 : 87));
+  tokens["--md-sys-color-surface-bright"] = hexFromArgb(neutral.tone(isDark ? 24 : 98));
+  // M3 surface-tint role: the spec ties it to the primary role (the "ink" that
+  // tints elevated surfaces). The npm Scheme has no property for it, so it is
+  // aliased onto the scheme's own primary rather than a hard-coded hue.
+  tokens["--md-sys-color-surface-tint"] = hexFromArgb(scheme.primary as number);
   return tokens;
 }
 

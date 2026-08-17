@@ -125,6 +125,9 @@ describe("md3-wallpaper palette engine", () => {
       "--md-sys-color-surface",
       "--md-sys-color-on-surface",
       "--md-sys-color-surface-container-highest",
+      "--md-sys-color-surface-dim",
+      "--md-sys-color-surface-bright",
+      "--md-sys-color-surface-tint",
       "--md-sys-color-error",
       "--md-sys-color-outline",
     ]) {

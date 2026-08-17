@@ -23,6 +23,8 @@ import {
 	hexFromSource,
 	type ThemeTokens,
 } from "./palette.ts";
+import { rgbToJch } from "./cam16.ts";
+import { hexToRgb01, targetFromArgs, type MonetTarget } from "./recolor.ts";
 
 /** localStorage key for the persisted wallpaper state (versioned). */
 export const STORAGE_KEY = "dsh.md3Wallpaper.v1";
@@ -48,6 +50,8 @@ export const DEFAULT_PRESET = "monet-mesh";
 export interface WallpaperState {
 	/** Downscaled JPEG data URL of an uploaded wallpaper, or null. */
 	wallpaper: string | null;
+	/** Optional IndexedDB key of the recolored (Monet-unified) full-res blob. */
+	recoloredBlobId: string | null;
 	/** Selected preset backdrop id (used while `wallpaper` is null). */
 	preset: string | null;
 	/** The Monet source color as an argb integer. */
@@ -83,10 +87,14 @@ export function loadState(): WallpaperState | null {
 			return null;
 		if (state.wallpaper !== null && typeof state.wallpaper !== "string")
 			return null;
+		// Newer field: a stale IndexedDB key is harmless (read resolves null).
+		if (state.recoloredBlobId !== undefined && typeof state.recoloredBlobId !== "string")
+			return null;
 		// Older persisted records predate presets: default to the first preset.
 		if (typeof state.preset !== "string" && state.wallpaper === null)
 			state.preset = DEFAULT_PRESET;
 		if (typeof state.preset !== "string") state.preset = null;
+		if (typeof state.recoloredBlobId !== "string") state.recoloredBlobId = null;
 		return state as WallpaperState;
 	} catch {
 		return null;
@@ -117,6 +125,7 @@ export function defaultState(): WallpaperState {
 	const mdSys = buildMdSysTheme(DEFAULT_SOURCE_TOKEN);
 	return {
 		wallpaper: null,
+		recoloredBlobId: null,
 		preset: DEFAULT_PRESET,
 		source: DEFAULT_SOURCE_TOKEN,
 		tokens,
@@ -149,6 +158,7 @@ export async function processWallpaper(file: File): Promise<WallpaperState> {
 		const wallpaper = canvas.toDataURL("image/jpeg", JPEG_QUALITY);
 		const state: WallpaperState = {
 			wallpaper,
+			recoloredBlobId: null,
 			preset: null,
 			source,
 			tokens: buildThemeTokens(source),
@@ -169,4 +179,44 @@ export function wallpaperUrl(state: WallpaperState): string | null {
 /** The source color as a hex string (favicon/accent hue). */
 export function sourceHex(state: WallpaperState): string {
 	return hexFromSource(state.source);
+}
+
+/**
+ * Derive the Monet recolor target from a source color (argb integer). The
+ * hue comes from the source's own CAM16 hue so the unified-tone wallpaper
+ * always leans toward its own primary; the chroma ceiling and neutral
+ * threshold keep grays gray.
+ *
+ * The MD3 light palette blend is filled from the mdSys role tokens when
+ * provided: filterLow = surface-container-lowest, filterMid = primary,
+ * filterHigh = surface-container-high, blended at `blend` strength (0.35 for
+ * the light wallpaper tint; pass 0 to disable the filter).
+ */
+export function monetTargetFromSource(
+	source: number,
+	mdSys?: Record<string, string>,
+	dark = false,
+	blend = 0.35,
+	mode: 0 | 1 = 0,
+): MonetTarget {
+	const r = ((source >> 16) & 0xff) / 255;
+	const g = ((source >> 8) & 0xff) / 255;
+	const b = (source & 0xff) / 255;
+	// rgbToJch expects sRGB (0..1) and linearizes internally.
+	const { c, h } = rgbToJch(r, g, b);
+	const target = targetFromArgs(h, c);
+	target.mode = mode;
+	if (mdSys) {
+		target.filterLow = hexToRgb01(
+			mdSys["--md-sys-color-surface-container-lowest"] ?? (dark ? "#141218" : "#f7f2fa"),
+		);
+		target.filterMid = hexToRgb01(
+			mdSys["--md-sys-color-primary"] ?? "#6750a4",
+		);
+		target.filterHigh = hexToRgb01(
+			mdSys["--md-sys-color-surface-container-high"] ?? (dark ? "#1d3668" : "#ece6f0"),
+		);
+		target.blend = blend;
+	}
+	return target;
 }

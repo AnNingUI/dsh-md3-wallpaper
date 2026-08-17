@@ -162,5 +162,25 @@ export function clientBundle(id: string, libEntry: readonly string[]): UserConfi
         intro: "var module = { exports: {} }; var exports = module.exports;",
       },
     },
+    {
+      // Standalone recolor worker: a classic (non-module) worker script that
+      // is loaded via `new Worker(<url>)` from the main bundle. It must be
+      // self-contained — no ModuleLoader handoff, no platform externals — so
+      // everything (cam16 math, WGSL string) is inlined into this one file.
+      name: `${id}/recolor-worker`,
+      entry: { "recolor.worker": "src/client/recolor.worker.ts" },
+      outDir: "lib",
+      format: "cjs",
+      platform: "browser",
+      target: "es2022",
+      dts: false,
+      sourcemap: true,
+      clean: false,
+      noExternal: [/.*/],
+      outputOptions: {
+        entryFileNames: "recolor.worker.js",
+        intro: "var module = { exports: {} }; var exports = module.exports;",
+      },
+    },
   ];
 }

@@ -18,8 +18,8 @@
     "./package.json": "./package.json"
   },
   "scripts": {
-    "build": "tsdown",
-    "prepare": "tsdown",
+    "build": "tsdown && node scripts/inline-worker.mjs",
+    "prepare": "tsdown && node scripts/inline-worker.mjs",
     "watch": "tsdown --watch",
     "test": "vitest run",
     "install:dsh": "node scripts/install.mjs",
