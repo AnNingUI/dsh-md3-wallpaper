@@ -1,4 +1,4 @@
-# @AnNingUI/dsh-client-ui-skin-md3-wallpaper
+# @anningui/dsh-client-ui-skin-md3-wallpaper
 
 <p align="center">
   <a href="./README.md">English</a> | <span>中文</span> 
@@ -81,7 +81,7 @@ pnpm install:dsh headless   # 或任意其他 profile 名
 
 脚本会：
 
-1. 把本项目链接进 `~/.dsh/profiles/<profile>/node_modules/@AnNingUI/`
+1. 把本项目链接进 `~/.dsh/profiles/<profile>/node_modules/@anningui/`
    （symlink；Windows 回退 junction）；
 2. 把激活 insert 写入**该 profile 自己的** `cordis.patch.yml` —— **绝不**写 harness
    home 的 `cordis.patch.yml`（它被所有 profile 共享，写它会影响 headless harness）。

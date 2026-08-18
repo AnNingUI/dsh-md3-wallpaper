@@ -5,7 +5,7 @@
  * Usage: node scripts/install.mjs [profile]
  *
  *   1. Links this project into the target profile's node_modules
- *      (<home>/profiles/<profile>/node_modules/@AnNingUI/<pkg>), so the dsh
+ *      (<home>/profiles/<profile>/node_modules/@anningui/<pkg>), so the dsh
  *      loader can resolve the skin bundle.
  *   2. Writes the activation insert row into the ACTIVE PROFILE's
  *      cordis.patch.yml — NEVER the harness-home cordis.patch.yml (that
@@ -17,8 +17,6 @@
  * profile patch the same way); this script only installs + activates THIS
  * skin idempotently.
  */
-import { homedir } from "node:os";
-import { basename, dirname, join } from "node:path";
 import {
   chmodSync,
   lstatSync,
@@ -32,9 +30,11 @@ import {
   symlinkSync,
   writeFileSync,
 } from "node:fs";
+import { homedir } from "node:os";
+import { basename, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const PKG = "@AnNingUI/dsh-client-ui-skin-md3-wallpaper";
+const PKG = "@anningui/dsh-client-ui-skin-md3-wallpaper";
 const ENTRY_ID = "ui-skin-md3-wallpaper";
 // new URL('..', import.meta.url) already lands on the project root.
 const SELF_DIR = fileURLToPath(new URL("..", import.meta.url));

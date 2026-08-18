@@ -5,7 +5,7 @@
  * is the MaterialYouNewTab temperature icon by default and morphs (M3 motion)
  * into its clock icon once the menu opens; the menu panel wears the M3
  * large-corner silhouette; the favicon is a dynamic dot in the Monet hue.
- * @module @AnNingUI/dsh-client-ui-skin-md3-wallpaper/art
+ * @module @anningui/dsh-client-ui-skin-md3-wallpaper/art
  */
 
 /**

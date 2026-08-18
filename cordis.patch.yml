@@ -4,4 +4,4 @@
 # skins is managed by scripts/dsh-skin (home-layer disabled rows).
 - insert:
     - id: ui-skin-md3-wallpaper
-      name: "@AnNingUI/dsh-client-ui-skin-md3-wallpaper"
+      name: "@anningui/dsh-client-ui-skin-md3-wallpaper"

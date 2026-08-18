@@ -1,31 +1,38 @@
 {
-  "id": "md3-wallpaper",
-  "name": "Material You 动态取色",
-  "nameEn": "Material You Wallpaper",
-  "author": "dsh-web-ui",
-  "tagline": "上传任意壁纸 · 莫奈算法自动取色 · 全 UI 与 SVG 跟随 MD3 动态色",
-  "description": "基于 @material/material-color-utilities 的 Material You (MD3) 皮肤：上传任意壁纸，Monet 算法从壁纸提取动态色，生成完整 MD3 调色板并应用到 dsh 全部 UI token（亮/暗双主题、侧边栏、聊天区、对话框、滚动条、代码语法色、SVG 图标与 favicon 无一遗漏），附带 Material You 有机形状 chrome（花瓣壁纸按钮、侧边栏有机弧线切口、菜单面板）与 M3 形状系统圆角。",
-  "tags": ["material-you", "md3", "dynamic-color", "monet", "wallpaper", "organic-shape"],
-  "accent": "#6750a4",
-  "bodyAttr": "data-dsh-md3-wallpaper",
-  "package": "@AnNingUI/dsh-client-ui-skin-md3-wallpaper",
-  "wiring": {
-    "id": "ui-skin-md3-wallpaper",
-    "bundleWired": false
-  },
-  "manifest": {
-    "name": "Material You 动态取色",
-    "nameEn": "Material You Wallpaper",
-    "author": "dsh-web-ui / AnNingUI",
-    "tagline": "上传任意壁纸 · 莫奈算法自动取色 · 全 UI 与 SVG 跟随 MD3 动态色",
-    "description": "基于 @material/material-color-utilities 的 Material You (MD3) 皮肤：上传任意壁纸，Monet 算法从壁纸提取动态色，生成完整 MD3 调色板并应用到 dsh 全部 UI token（亮/暗双主题、侧边栏、聊天区、对话框、滚动条、代码语法色、SVG 图标与 favicon 无一遗漏），附带 Material You 有机形状 chrome（花瓣壁纸按钮、侧边栏有机弧线切口、菜单面板）与 M3 形状系统圆角。",
-    "accent": "#6750a4",
-    "bodyAttr": "data-dsh-md3-wallpaper",
-    "package": "@AnNingUI/dsh-client-ui-skin-md3-wallpaper"
-  },
-  "preview": {
-    "light": "packages/skins/md3-wallpaper/preview/light.png",
-    "dark": "packages/skins/md3-wallpaper/preview/dark.png"
-  },
-  "order": 10
+	"id": "md3-wallpaper",
+	"name": "Material You 动态取色",
+	"nameEn": "Material You Wallpaper",
+	"author": "dsh-web-ui",
+	"tagline": "上传任意壁纸 · 莫奈算法自动取色 · 全 UI 与 SVG 跟随 MD3 动态色",
+	"description": "基于 @material/material-color-utilities 的 Material You (MD3) 皮肤：上传任意壁纸，Monet 算法从壁纸提取动态色，生成完整 MD3 调色板并应用到 dsh 全部 UI token（亮/暗双主题、侧边栏、聊天区、对话框、滚动条、代码语法色、SVG 图标与 favicon 无一遗漏），附带 Material You 有机形状 chrome（花瓣壁纸按钮、侧边栏有机弧线切口、菜单面板）与 M3 形状系统圆角。",
+	"tags": [
+		"material-you",
+		"md3",
+		"dynamic-color",
+		"monet",
+		"wallpaper",
+		"organic-shape"
+	],
+	"accent": "#6750a4",
+	"bodyAttr": "data-dsh-md3-wallpaper",
+	"package": "@anningui/dsh-client-ui-skin-md3-wallpaper",
+	"wiring": {
+		"id": "ui-skin-md3-wallpaper",
+		"bundleWired": false
+	},
+	"manifest": {
+		"name": "Material You 动态取色",
+		"nameEn": "Material You Wallpaper",
+		"author": "dsh-web-ui / AnNingUI",
+		"tagline": "上传任意壁纸 · 莫奈算法自动取色 · 全 UI 与 SVG 跟随 MD3 动态色",
+		"description": "基于 @material/material-color-utilities 的 Material You (MD3) 皮肤：上传任意壁纸，Monet 算法从壁纸提取动态色，生成完整 MD3 调色板并应用到 dsh 全部 UI token（亮/暗双主题、侧边栏、聊天区、对话框、滚动条、代码语法色、SVG 图标与 favicon 无一遗漏），附带 Material You 有机形状 chrome（花瓣壁纸按钮、侧边栏有机弧线切口、菜单面板）与 M3 形状系统圆角。",
+		"accent": "#6750a4",
+		"bodyAttr": "data-dsh-md3-wallpaper",
+		"package": "@anningui/dsh-client-ui-skin-md3-wallpaper"
+	},
+	"preview": {
+		"light": "packages/skins/md3-wallpaper/preview/light.png",
+		"dark": "packages/skins/md3-wallpaper/preview/dark.png"
+	},
+	"order": 10
 }

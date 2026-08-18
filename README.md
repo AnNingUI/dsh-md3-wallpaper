@@ -1,4 +1,4 @@
-# @AnNingUI/dsh-client-ui-skin-md3-wallpaper
+# @anningui/dsh-client-ui-skin-md3-wallpaper
 
 <p align="center">
   <span>English</span> | <a href="./README.zh.md">中文</a> 
@@ -102,7 +102,7 @@ pnpm install:dsh headless   # or any other profile name
 
 The script:
 
-1. Links this project into `~/.dsh/profiles/<profile>/node_modules/@AnNingUI/`
+1. Links this project into `~/.dsh/profiles/<profile>/node_modules/@anningui/`
    (symlink; junction fallback on Windows);
 2. Writes the activation insert row into the **profile's** `cordis.patch.yml`
    — **never** the harness-home `cordis.patch.yml`, which is shared by every

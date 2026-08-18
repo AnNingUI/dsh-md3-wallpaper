@@ -12,9 +12,10 @@
  * keeps the localStorage footprint far below the 5MB quota. The skin's apply()
  * owns writing the CSS variables onto document.body; this module only produces
  * and persists the state.
- * @module @AnNingUI/dsh-client-ui-skin-md3-wallpaper/wallpaper
+ * @module @anningui/dsh-client-ui-skin-md3-wallpaper/wallpaper
  */
 
+import { rgbToJch } from "./cam16.ts";
 import {
 	buildMdSysTheme,
 	buildThemeTokens,
@@ -23,7 +24,6 @@ import {
 	hexFromSource,
 	type ThemeTokens,
 } from "./palette.ts";
-import { rgbToJch } from "./cam16.ts";
 import { hexToRgb01, targetFromArgs, type MonetTarget } from "./recolor.ts";
 
 /** localStorage key for the persisted wallpaper state (versioned). */
@@ -88,7 +88,10 @@ export function loadState(): WallpaperState | null {
 		if (state.wallpaper !== null && typeof state.wallpaper !== "string")
 			return null;
 		// Newer field: a stale IndexedDB key is harmless (read resolves null).
-		if (state.recoloredBlobId !== undefined && typeof state.recoloredBlobId !== "string")
+		if (
+			state.recoloredBlobId !== undefined &&
+			typeof state.recoloredBlobId !== "string"
+		)
 			return null;
 		// Older persisted records predate presets: default to the first preset.
 		if (typeof state.preset !== "string" && state.wallpaper === null)
@@ -208,13 +211,13 @@ export function monetTargetFromSource(
 	target.mode = mode;
 	if (mdSys) {
 		target.filterLow = hexToRgb01(
-			mdSys["--md-sys-color-surface-container-lowest"] ?? (dark ? "#141218" : "#f7f2fa"),
+			mdSys["--md-sys-color-surface-container-lowest"] ??
+				(dark ? "#141218" : "#f7f2fa"),
 		);
-		target.filterMid = hexToRgb01(
-			mdSys["--md-sys-color-primary"] ?? "#6750a4",
-		);
+		target.filterMid = hexToRgb01(mdSys["--md-sys-color-primary"] ?? "#6750a4");
 		target.filterHigh = hexToRgb01(
-			mdSys["--md-sys-color-surface-container-high"] ?? (dark ? "#1d3668" : "#ece6f0"),
+			mdSys["--md-sys-color-surface-container-high"] ??
+				(dark ? "#1d3668" : "#ece6f0"),
 		);
 		target.blend = blend;
 	}

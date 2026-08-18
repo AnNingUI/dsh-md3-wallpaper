@@ -24,7 +24,7 @@
  * clock icon.
  *
  * No services are injected: the skin needs only the DOM.
- * @module @AnNingUI/dsh-client-ui-skin-md3-wallpaper/client
+ * @module @anningui/dsh-client-ui-skin-md3-wallpaper/client
  */
 
 import type { Context } from "@deepseek-ai/cordis";
@@ -223,7 +223,7 @@ export const DEV_RELOAD_INTERVAL_MS = 2000;
 
 /** The skin's own bundle path (same origin; the live URL adds its rev). */
 const BUNDLE_PATH =
-	"/plugins/@AnNingUI/dsh-client-ui-skin-md3-wallpaper/client.js";
+	"/plugins/@anningui/dsh-client-ui-skin-md3-wallpaper/client.js";
 
 /** The URL this very script was loaded from, captured while it executes
  *  (document.currentScript is only valid during script evaluation). */
@@ -428,7 +428,10 @@ export function apply(ctx: Context): void {
 		// (0..1): 0 → no blur, 1 → 100px. The browser re-rasterizes the
 		// backdrop-filter live as the control moves — no JS wiring needed.
 		setVar("backdrop-filter", "blur(calc(var(--dsw-skin-scrim, 0) * 100px))");
-		setVar("-webkit-backdrop-filter", "blur(calc(var(--dsw-skin-scrim, 0) * 100px))");
+		setVar(
+			"-webkit-backdrop-filter",
+			"blur(calc(var(--dsw-skin-scrim, 0) * 100px))",
+		);
 		setVar("background-size", "cover");
 		setVar("background-position", "center");
 		setVar("background-attachment", "fixed");

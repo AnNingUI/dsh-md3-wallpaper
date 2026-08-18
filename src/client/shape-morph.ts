@@ -13,7 +13,7 @@
  *
  * Zero runtime deps; standalone so the client bundle no longer carries a
  * vendored path-morph library (and its parser).
- * @module @AnNingUI/dsh-client-ui-skin-md3-wallpaper/shape-morph
+ * @module @anningui/dsh-client-ui-skin-md3-wallpaper/shape-morph
  */
 
 /** Number of numeric arguments each SVG path command expects (lowercase keys). */
@@ -87,16 +87,29 @@ export function morphPath(a: string, b: string, w: number): string {
    A tiny Newton solver over the Bézier in parameter t. */
 
 /** Solve the parameter `t` (in [0,1]) for a cubic-bezier x-progress value. */
-function solveT(p0x: number, p1x: number, p2x: number, p3x: number, x: number): number {
+function solveT(
+	p0x: number,
+	p1x: number,
+	p2x: number,
+	p3x: number,
+	x: number,
+): number {
 	if (x <= 0) return 0;
 	if (x >= 1) return 1;
 	let t = x;
 	for (let i = 0; i < 8; i++) {
 		const mt = 1 - t;
-		const mx = mt * mt * mt * p0x + 3 * mt * mt * t * p1x + 3 * mt * t * t * p2x + t * t * t * p3x;
+		const mx =
+			mt * mt * mt * p0x +
+			3 * mt * mt * t * p1x +
+			3 * mt * t * t * p2x +
+			t * t * t * p3x;
 		const dx = mx - x;
 		if (Math.abs(dx) < 1e-6) break;
-		const dTdt = 3 * mt * mt * (p1x - p0x) + 6 * mt * t * (p2x - p1x) + 3 * t * t * (p3x - p2x);
+		const dTdt =
+			3 * mt * mt * (p1x - p0x) +
+			6 * mt * t * (p2x - p1x) +
+			3 * t * t * (p3x - p2x);
 		if (Math.abs(dTdt) < 1e-8) break;
 		t -= dx / dTdt;
 		t = Math.min(1, Math.max(0, t));
@@ -105,10 +118,21 @@ function solveT(p0x: number, p1x: number, p2x: number, p3x: number, x: number): 
 }
 
 /** Evaluate cubic-bezier(x1,y1,x2,y2) at normalized progress [0,1]. */
-function cubicBezier(x1: number, y1: number, x2: number, y2: number, u: number): number {
+function cubicBezier(
+	x1: number,
+	y1: number,
+	x2: number,
+	y2: number,
+	u: number,
+): number {
 	const t = solveT(0, x1, x2, 1, u);
 	const mt = 1 - t;
-	return mt * mt * mt * 0 + 3 * mt * mt * t * y1 + 3 * mt * t * t * y2 + t * t * t * 1;
+	return (
+		mt * mt * mt * 0 +
+		3 * mt * mt * t * y1 +
+		3 * mt * t * t * y2 +
+		t * t * t * 1
+	);
 }
 
 /** M3 emphasized: cubic-bezier(0.2, 0, 0, 1) — fast in, very slow settle. */
