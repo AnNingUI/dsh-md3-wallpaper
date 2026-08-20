@@ -850,11 +850,22 @@ body[data-dsh-md3-wallpaper][data-md3-show-bg="on"][data-ds-dark-theme]
 
 /* Composer seat: frosted elevated surface so the wallpaper glows behind the
    typing line while the input stays readable. */
-/* div[data-composer-seat] {
-  background: color-mix(in srgb, var(--md-sys-color-surface-container-high) 78%, transparent) !important;
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-} */
+div[data-composer-seat] {
+	background: radial-gradient(
+		circle at center,
+		var(--dsw-alias-bg-base) 0%,
+		color-mix(
+				in srgb,
+				var(--md-sys-color-surface-container-high) 78%,
+				transparent
+			)
+			50%,
+		transparent 70%
+	) !important;
+	margin-left: 12px;
+	margin-right: 12px;
+	border-radius: 25% 25% 12.5% 12.5%;
+}
 
 /* --- Interaction + button aliases: MD3 (light) -----------------------------
    palette.ts drives the neutral-gray hover/active/interaction aliases so
@@ -1460,4 +1471,8 @@ body[data-dsh-md3-wallpaper] {
 /* class=*_root */
 div[class$="_root"][data-phase="active"] {
 	background: transparent !important;
+}
+
+div[data-dsh-shutdown-float="true"] {
+	display: none;
 }
